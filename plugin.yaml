@@ -1,0 +1,65 @@
+##################################################################################
+# Cloudify host pool built in types and plugins definitions.
+##################################################################################
+
+plugins:
+    hostpool:
+        executor: central_deployment_agent
+        source: https://github.com/cloudify-cosmo/cloudify-host-pool-plugin/archive/master.zip
+
+node_types:
+  host_pool_node:
+    derived_from: cloudify.nodes.Compute
+    interfaces:
+      cloudify.interfaces.worker_installer:
+        install:
+          implementation: agent_installer.worker_installer.tasks.install
+          inputs:
+            cloudify_agent: 
+              default:
+                user: {get_attribute: [SELF, cloudify_agent, user]}
+                key: {get_attribute: [SELF, cloudify_agent, key]}
+        start:
+          implementation: agent_installer.worker_installer.tasks.start
+          inputs:
+            cloudify_agent: 
+              default:
+                user: {get_attribute: [SELF, cloudify_agent, user]}
+                key: {get_attribute: [SELF, cloudify_agent, key]}
+        stop:
+          implementation: agent_installer.worker_installer.tasks.stop
+          inputs:
+            cloudify_agent: 
+              default:
+                user: {get_attribute: [SELF, cloudify_agent, user]}
+                key: {get_attribute: [SELF, cloudify_agent, key]}
+        uninstall:
+          implementation: agent_installer.worker_installer.tasks.uninstall
+          inputs:
+            cloudify_agent: 
+              default:
+                user: {get_attribute: [SELF, cloudify_agent, user]}
+                key: {get_attribute: [SELF, cloudify_agent, key]}
+        restart:
+          implementation: agent_installer.worker_installer.tasks.restart
+          inputs:
+            cloudify_agent: 
+              default:
+                user: {get_attribute: [SELF, cloudify_agent, user]}
+                key: {get_attribute: [SELF, cloudify_agent, key]}
+      cloudify.interfaces.lifecycle:
+        start: 
+          implementation: hostpool.host_pool_plugin.tasks.acquire
+          inputs:
+            service_url:
+              description: ""
+              type: string
+              default: ""
+        delete: 
+          implementation: hostpool.host_pool_plugin.tasks.release
+          inputs:
+            service_url:
+              description: ""
+              type: string
+              default: ""
+
