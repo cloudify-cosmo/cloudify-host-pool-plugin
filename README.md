@@ -1,2 +1,2 @@
-# cloudify-byon-plugin
-BYON plugin for Cloudify
+Cloudify Host-Pool Plugin
+=========================
