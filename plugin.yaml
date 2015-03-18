@@ -72,3 +72,58 @@ node_types:
               description: ""
               type: string
               default: ""
+
+  cloudify.hostpool.nodes.WindowsHost:
+    derived_from: cloudify.nodes.Compute
+    interfaces:
+      cloudify.interfaces.worker_installer:
+        install:
+          implementation: windows_agent_installer.windows_agent_installer.tasks.install
+          inputs:
+            cloudify_agent: 
+              default:
+                user: {get_attribute: [SELF, user]}
+                password: {get_attribute: [SELF, password]}
+        start:
+          implementation: windows_agent_installer.windows_agent_installer.tasks.start
+          inputs:
+            cloudify_agent: 
+              default:
+                user: {get_attribute: [SELF, user]}
+                password: {get_attribute: [SELF, password]}
+        stop:
+          implementation: windows_agent_installer.windows_agent_installer.tasks.stop
+          inputs:
+            cloudify_agent: 
+              default:
+                user: {get_attribute: [SELF, user]}
+                password: {get_attribute: [SELF, password]}
+        uninstall:
+          implementation: windows_agent_installer.windows_agent_installer.tasks.uninstall
+          inputs:
+            cloudify_agent: 
+              default:
+                user: {get_attribute: [SELF, user]}
+                password: {get_attribute: [SELF, password]}
+        restart:
+          implementation: windows_agent_installer.windows_agent_installer.tasks.restart
+          inputs:
+            cloudify_agent: 
+              default:
+                user: {get_attribute: [SELF, user]}
+                password: {get_attribute: [SELF, password]}
+      cloudify.interfaces.lifecycle:
+        start: 
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
+          inputs:
+            service_url:
+              description: ""
+              type: string
+              default: ""
+        delete: 
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.release
+          inputs:
+            service_url:
+              description: ""
+              type: string
+              default: ""
