@@ -5,7 +5,7 @@
 plugins:
   hostpool:
     executor: central_deployment_agent
-    source: https://github.com/cloudify-cosmo/cloudify-host-pool-plugin/archive/CFY-2295_host_pool_plugin.zip
+    source: https://github.com/cloudify-cosmo/cloudify-host-pool-plugin/archive/master.zip
 
 node_types:
   cloudify.hostpool.nodes.Host:
@@ -62,14 +62,14 @@ node_types:
           implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
           inputs:
             service_url:
-              description: ""
+              description: "The url to hostpool service"
               type: string
               default: ""
         delete: 
           implementation: hostpool.cloudify_hostpool_plugin.tasks.release
           inputs:
             service_url:
-              description: ""
+              description: "The url to hostpool service"
               type: string
               default: ""
 
@@ -117,13 +117,13 @@ node_types:
           implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
           inputs:
             service_url:
-              description: ""
+              description: "The url to hostpool service"
               type: string
               default: ""
         delete: 
           implementation: hostpool.cloudify_hostpool_plugin.tasks.release
           inputs:
             service_url:
-              description: ""
+              description: "The url to hostpool service"
               type: string
               default: ""

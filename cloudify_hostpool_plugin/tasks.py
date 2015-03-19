@@ -42,7 +42,8 @@ def acquire(service_url, **kwargs):
         ctx.instance.runtime_properties['port'] = host['port']
         ctx.instance.runtime_properties['host'] = host
     elif response.status_code != httplib.INTERNAL_SERVER_ERROR:
-        raise NonRecoverableError(response.json()['error'])
+        raise NonRecoverableError(
+            response.json().get('error', response.status_code))
     else:
         raise NonRecoverableError('Internal server error')
 
@@ -54,14 +55,15 @@ def release(service_url, **kwargs):
     response = requests.delete('{0}/hosts/{1}'.format(service_url, host_id))
     ctx.logger.debug('Response received: {0}'.format(str(response)))
     if not response.ok:
-        ctx.logger.warning(response.text)
+        raise NonRecoverableError(
+            response.json().get('error', response.status_code))
     key_file = ctx.instance.runtime_properties.get('key')
     if key_file and os.path.exists(key_file):
         os.unlink(key_file)
 
 
 def _save_keyfile(key_content, host_id):
-    ctx.logger.info("Save key")
+    ctx.logger.info('Save key')
     key_path = os.path.expanduser("~/.ssh/key_{0}".format(host_id))
     with open(key_path, 'w') as f:
         f.write(key_content)
