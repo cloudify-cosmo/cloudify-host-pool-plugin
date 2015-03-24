@@ -17,59 +17,61 @@ node_types:
           inputs:
             cloudify_agent: 
               default:
-                user: {get_attribute: [SELF, user]}
-                key: {get_attribute: [SELF, key]}
-                password: {get_attribute: [SELF, password]}
-                port: {get_attribute: [SELF, port]}
+                user: { get_attribute: [SELF, user] }
+                key: { get_attribute: [SELF, key] }
+                password: { get_attribute: [SELF, password] }
+                port: { get_attribute: [SELF, port] }
         start:
           implementation: agent_installer.worker_installer.tasks.start
           inputs:
             cloudify_agent: 
               default:
-                user: {get_attribute: [SELF, user]}
-                key: {get_attribute: [SELF, key]}
-                password: {get_attribute: [SELF, password]}
-                port: {get_attribute: [SELF, port]}
+                user: { get_attribute: [SELF, user] }
+                key: { get_attribute: [SELF, key] }
+                password: { get_attribute: [SELF, password] }
+                port: { get_attribute: [SELF, port] }
         stop:
           implementation: agent_installer.worker_installer.tasks.stop
           inputs:
             cloudify_agent: 
               default:
-                user: {get_attribute: [SELF, user]}
-                key: {get_attribute: [SELF, key]}
-                password: {get_attribute: [SELF, password]}
-                port: {get_attribute: [SELF, port]}
+                user: { get_attribute: [SELF, user] }
+                key: { get_attribute: [SELF, key] }
+                password: { get_attribute: [SELF, password] }
+                port: { get_attribute: [SELF, port] }
         uninstall:
           implementation: agent_installer.worker_installer.tasks.uninstall
           inputs:
             cloudify_agent: 
               default:
-                user: {get_attribute: [SELF, user]}
-                key: {get_attribute: [SELF, key]}
-                password: {get_attribute: [SELF, password]}
-                port: {get_attribute: [SELF, port]}
+                user: { get_attribute: [SELF, user] }
+                key: { get_attribute: [SELF, key] }
+                password: { get_attribute: [SELF, password] }
+                port: { get_attribute: [SELF, port] }
         restart:
           implementation: agent_installer.worker_installer.tasks.restart
           inputs:
-            cloudify_agent: 
+            cloudify_agent:
               default:
-                user: {get_attribute: [SELF, user]}
-                key: {get_attribute: [SELF, key]}
-                password: {get_attribute: [SELF, password]}
-                port: {get_attribute: [SELF, port]}
+                user: { get_attribute: [SELF, user] }
+                key: { get_attribute: [SELF, key] }
+                password: { get_attribute: [SELF, password] }
+                port: { get_attribute: [SELF, port] }
       cloudify.interfaces.lifecycle:
         start: 
           implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
           inputs:
             service_url:
-              description: "The url to hostpool service"
+              description: >
+                The url to hostpool service
               type: string
               default: ""
         delete: 
           implementation: hostpool.cloudify_hostpool_plugin.tasks.release
           inputs:
             service_url:
-              description: "The url to hostpool service"
+              description: >
+                The url to hostpool service
               type: string
               default: ""
 
@@ -82,48 +84,50 @@ node_types:
           inputs:
             cloudify_agent: 
               default:
-                user: {get_attribute: [SELF, user]}
-                password: {get_attribute: [SELF, password]}
+                user: { get_attribute: [SELF, user] }
+                password: { get_attribute: [SELF, password] }
         start:
           implementation: windows_agent_installer.windows_agent_installer.tasks.start
           inputs:
             cloudify_agent: 
               default:
-                user: {get_attribute: [SELF, user]}
-                password: {get_attribute: [SELF, password]}
+                user: { get_attribute: [SELF, user] }
+                password: { get_attribute: [SELF, password] }
         stop:
           implementation: windows_agent_installer.windows_agent_installer.tasks.stop
           inputs:
             cloudify_agent: 
               default:
-                user: {get_attribute: [SELF, user]}
-                password: {get_attribute: [SELF, password]}
+                user: { get_attribute: [SELF, user] }
+                password: { get_attribute: [SELF, password] }
         uninstall:
           implementation: windows_agent_installer.windows_agent_installer.tasks.uninstall
           inputs:
             cloudify_agent: 
               default:
-                user: {get_attribute: [SELF, user]}
-                password: {get_attribute: [SELF, password]}
+                user: { get_attribute: [SELF, user] }
+                password: { get_attribute: [SELF, password] }
         restart:
           implementation: windows_agent_installer.windows_agent_installer.tasks.restart
           inputs:
-            cloudify_agent: 
+            cloudify_agent:
               default:
-                user: {get_attribute: [SELF, user]}
-                password: {get_attribute: [SELF, password]}
+                user: { get_attribute: [SELF, user] }
+                password: { get_attribute: [SELF, password] }
       cloudify.interfaces.lifecycle:
         start: 
           implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
           inputs:
             service_url:
-              description: "The url to hostpool service"
+              description: >
+                The url to hostpool service
               type: string
               default: ""
         delete: 
           implementation: hostpool.cloudify_hostpool_plugin.tasks.release
           inputs:
             service_url:
-              description: "The url to hostpool service"
+              description: >
+                The url to hostpool service
               type: string
               default: ""
