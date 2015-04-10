@@ -17,13 +17,13 @@ from setuptools import setup
 
 setup(
     name='cloudify-host-pool-plugin',
-    version='3.2rc',
+    version='1.2rc1',
     license='LICENSE',
     packages=['cloudify_hostpool_plugin'],
     description='A Cloudify plugin enabling hosts acquisition '
                 'via cloudify-host-pool-service',
     install_requires=[
-        'cloudify-plugins-common>=3.2rc',
+        'cloudify-plugins-common>=3.2rc1',
         'requests'
     ]
 )
