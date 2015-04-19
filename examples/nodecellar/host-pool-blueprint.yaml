@@ -8,7 +8,7 @@ tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
   - http://www.getcloudify.org/spec/cloudify/3.2rc1/types.yaml
-  - http://www.getcloudify.org/spec/host-pool-plugin/1.2rc1/plugin.yaml
+  - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-host-pool-plugin/CFY-2209-system-tests/plugin.yaml
   - types/nodecellar.yaml
 
 inputs:
@@ -17,18 +17,22 @@ inputs:
     description: >
       URL to the host pool service that will allocate hosts
 
-
 node_types:
 
   nodecellar.nodes.Host:
     derived_from: cloudify.hostpool.nodes.Host
-    cloudify.interfaces.lifecycle:
-      create:
-        inputs:
-          service_url: { get_input: host_pool_service_endpoint }
-      delete:
-        inputs:
-          service_url: { get_input: host_pool_service_endpoint }
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
+          inputs:
+            service_url:
+              default: { get_input: host_pool_service_endpoint }
+        delete:
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.release
+          inputs:
+            service_url:
+              default: { get_input: host_pool_service_endpoint }
 
 
 node_templates:
