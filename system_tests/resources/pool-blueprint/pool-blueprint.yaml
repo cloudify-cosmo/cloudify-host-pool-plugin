@@ -1,0 +1,61 @@
+##################################################################
+# this blueprint is used for provisioning hosts that will serve
+# as the host-pool for running cloudify-host-pool-plugin tests
+##################################################################
+
+tosca_definitions_version: cloudify_dsl_1_0
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/3.2rc1/types.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/1.2rc1/plugin.yaml
+  - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-host-pool-service/master/host-pool-service.yaml
+
+
+inputs:
+
+  image:
+    description: >
+      Image to be used when launching agent VM's
+
+  flavor:
+    description: >
+      Flavor of the agent VM's
+
+node_templates:
+
+  pool_host_1:
+    type: cloudify.openstack.nodes.Server
+    properties:
+      server:
+        image: { get_input: image }
+        flavor: { get_input: flavor }
+    relationships:
+      - target: floatingip_1
+        type: cloudify.openstack.server_connected_to_floating_ip
+
+  pool_host_2:
+    type: cloudify.openstack.nodes.Server
+    properties:
+      server:
+        image: { get_input: image }
+        flavor: { get_input: flavor }
+    relationships:
+      - target: floatingip_2
+        type: cloudify.openstack.server_connected_to_floating_ip
+
+  floatingip_1:
+    type: cloudify.openstack.nodes.FloatingIP
+
+  floatingip_2:
+    type: cloudify.openstack.nodes.FloatingIP
+
+outputs:
+  hosts:
+    description: Hosts description of the pool
+    value:
+      host_1:
+        ip: { get_attribute: [pool_host_1, ip] }
+        public_address: { get_attribute: [floatingip_1, floating_ip_address] }
+      host_2:
+        ip: { get_attribute: [pool_host_2, ip] }
+        public_address: { get_attribute: [floatingip_2, floating_ip_address] }

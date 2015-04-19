@@ -65,7 +65,7 @@ node_types:
               description: >
                 The url to hostpool service
               type: string
-        delete: 
+        delete:
           implementation: hostpool.cloudify_hostpool_plugin.tasks.release
           inputs:
             service_url:
