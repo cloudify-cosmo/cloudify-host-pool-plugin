@@ -23,6 +23,13 @@ inputs:
 
 node_templates:
 
+  ##################################################################
+  # Host number 1. Note that we connect a floating ip and
+  # both security groups to this host because we have no way of
+  # knowing which host will be assigned to the nodejs and which to
+  # the mongod
+  ##################################################################
+
   pool_host_1:
     type: cloudify.openstack.nodes.Server
     properties:
@@ -33,6 +40,17 @@ node_templates:
     relationships:
       - target: floatingip_1
         type: cloudify.openstack.server_connected_to_floating_ip
+      - target: nodecellar_security_group
+        type: cloudify.openstack.server_connected_to_security_group
+      - target: mongod_security_group
+        type: cloudify.openstack.server_connected_to_security_group
+
+  ##################################################################
+  # Host number 2. Note that we connect a floating ip and
+  # both security groups to this host because we have no way of
+  # knowing which host will be assigned to the nodejs and which to
+  # the mongod
+  ##################################################################
 
   pool_host_2:
     type: cloudify.openstack.nodes.Server
@@ -44,12 +62,50 @@ node_templates:
     relationships:
       - target: floatingip_2
         type: cloudify.openstack.server_connected_to_floating_ip
+      - target: nodecellar_security_group
+        type: cloudify.openstack.server_connected_to_security_group
+      - target: mongod_security_group
+        type: cloudify.openstack.server_connected_to_security_group
 
   floatingip_1:
     type: cloudify.openstack.nodes.FloatingIP
 
   floatingip_2:
     type: cloudify.openstack.nodes.FloatingIP
+
+  ###########################################################
+  # A security group to enable access to the nodejs host
+  # using the port of the nodecellar application.
+  ###########################################################
+
+  nodecellar_security_group:
+    type: cloudify.openstack.nodes.SecurityGroup
+    properties:
+      security_group:
+        name: nodecellar_security_group
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          port: 8080
+
+  ###########################################################
+  # A security group to enable access to the mongo host
+  # using the port of the mongo node.
+  #
+  # We need this so that the nodecellar application can
+  # comminicate with MongoDB, since they are running on
+  # different hosts.
+  ###########################################################
+
+  mongod_security_group:
+    type: cloudify.openstack.nodes.SecurityGroup
+    properties:
+      security_group:
+        name: mongod_security_group
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          port: 27017
+        - remote_ip_prefix: 0.0.0.0/0
+          port: 28017
 
 outputs:
   hosts:
