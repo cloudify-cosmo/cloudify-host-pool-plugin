@@ -141,7 +141,7 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
         # outputs of the host-pool-service deployment
 
         outputs = self.client.deployments.outputs.get(
-            deployment_id=self.ho).outputs
+            deployment_id=self.host_pool_service_deployment_id).outputs
         endpoint = 'http://{0}:{1}'.format(
             outputs['endpoint']['ip_address'],
             outputs['endpoint']['port'])

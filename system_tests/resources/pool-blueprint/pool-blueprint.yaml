@@ -26,6 +26,7 @@ node_templates:
   pool_host_1:
     type: cloudify.openstack.nodes.Server
     properties:
+      install_agent: false
       server:
         image: { get_input: image }
         flavor: { get_input: flavor }
@@ -36,6 +37,7 @@ node_templates:
   pool_host_2:
     type: cloudify.openstack.nodes.Server
     properties:
+      install_agent: false
       server:
         image: { get_input: image }
         flavor: { get_input: flavor }
