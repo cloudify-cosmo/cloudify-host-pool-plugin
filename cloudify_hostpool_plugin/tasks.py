@@ -12,6 +12,7 @@
 # * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # * See the License for the specific language governing permissions and
 # * limitations under the License.
+
 import os
 import requests
 import stat
@@ -29,17 +30,11 @@ def acquire(service_url, **kwargs):
     if response.status_code == requests.codes.CREATED:
         host = response.json()
         ctx.logger.info('Acquired host: {0}'.format(host['host']))
-        ctx.instance.runtime_properties['ip'] = host['host']
         key_content = host['auth'].get('keyfile')
+        key_path = None
         if key_content:
             key_path = _save_keyfile(key_content, host['host_id'])
-            ctx.instance.runtime_properties['key'] = key_path
-        else:
-            ctx.instance.runtime_properties['password'] = \
-                host['auth'].get('password')
-        ctx.instance.runtime_properties['user'] = host['auth']['username']
-        ctx.instance.runtime_properties['port'] = host['port']
-        ctx.instance.runtime_properties['host'] = host
+        _set_runtime_properties(host, key_path)
     else:
         _handle_error(response)
 
@@ -58,7 +53,6 @@ def release(service_url, **kwargs):
 
 
 def _save_keyfile(key_content, host_id):
-    ctx.logger.info('Save key')
     key_path = os.path.expanduser('~/.ssh/key_{0}'.format(host_id))
     with open(key_path, 'w') as f:
         f.write(key_content)
@@ -73,3 +67,15 @@ def _handle_error(response):
         reason = response.reason
     raise NonRecoverableError(
         'Error: {0} Reason: {1}'.format(response.status_code, reason))
+
+
+def _set_runtime_properties(host, key_path):
+    ctx.instance.runtime_properties['ip'] = host['host']
+    ctx.instance.runtime_properties['user'] = host['auth']['username']
+    ctx.instance.runtime_properties['port'] = host['port']
+    ctx.instance.runtime_properties['host_id'] = host['host_id']
+    ctx.instance.runtime_properties['public_address'] = host.get(
+        'public_address')
+    ctx.instance.runtime_properties['password'] = \
+        host['auth'].get('password')
+    ctx.instance.runtime_properties['key'] = key_path

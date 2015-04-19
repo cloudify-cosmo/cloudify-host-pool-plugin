@@ -58,22 +58,20 @@ node_types:
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
       cloudify.interfaces.lifecycle:
-        start: 
+        create:
           implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
           inputs:
             service_url:
               description: >
                 The url to hostpool service
               type: string
-              default: ""
-        delete: 
+        delete:
           implementation: hostpool.cloudify_hostpool_plugin.tasks.release
           inputs:
             service_url:
               description: >
                 The url to hostpool service
               type: string
-              default: ""
 
   cloudify.hostpool.nodes.WindowsHost:
     derived_from: cloudify.nodes.Compute
@@ -122,7 +120,6 @@ node_types:
               description: >
                 The url to hostpool service
               type: string
-              default: ""
         delete: 
           implementation: hostpool.cloudify_hostpool_plugin.tasks.release
           inputs:
@@ -130,4 +127,3 @@ node_types:
               description: >
                 The url to hostpool service
               type: string
-              default: ""
