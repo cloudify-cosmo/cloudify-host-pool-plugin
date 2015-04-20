@@ -34,6 +34,10 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
         self._test_nodecellar_impl(
             'examples/nodecellar/host-pool-blueprint.yaml')
 
+    def assert_monitoring_data_exists(self):
+        # this blueprint does not define monitoring
+        pass
+
     def _provision_pool(self):
 
         blueprint_path = resources.get_resource(
@@ -100,14 +104,27 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
         blueprint_id = '{0}-host-pool-service-blueprint'.format(self.test_id)
         deployment_id = '{0}-host-pool-service-deployment'.format(
             self.test_id)
-        self.upload_deploy_and_execute_install(
-            blueprint_id=blueprint_id,
-            deployment_id=deployment_id,
-            inputs={
-                'image': self.env.ubuntu_image_id,
-                'flavor': self.env.small_flavor_id
-            }
-        )
+        try:
+            self.upload_deploy_and_execute_install(
+                blueprint_id=blueprint_id,
+                deployment_id=deployment_id,
+                inputs={
+                    'image': self.env.ubuntu_image_id,
+                    'flavor': self.env.small_flavor_id
+                }
+            )
+        finally:
+
+            # remove the key and pool generated files
+            generated_key = resources.get_resource(
+                'host-pool-service-blueprint/keys/agent_key.pem')
+            generated_pool = resources.get_resource(
+                'host-pool-service-blueprint/pool.yaml')
+            if os.path.exists(generated_key):
+                os.remove(generated_key)
+            if os.path.exists(generated_pool):
+                os.remove(generated_pool)
+
         self.host_pool_service_deployment_id = deployment_id
 
     @property
@@ -146,4 +163,3 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
             outputs['endpoint']['ip_address'],
             outputs['endpoint']['port'])
         return {'host_pool_service_endpoint': endpoint}
-
