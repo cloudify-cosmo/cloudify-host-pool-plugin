@@ -74,7 +74,7 @@ node_types:
               type: string
 
   cloudify.hostpool.nodes.WindowsHost:
-    derived_from: cloudify.nodes.Compute
+    derived_from: cloudify.hostpool.nodes.Host
     interfaces:
       cloudify.interfaces.worker_installer:
         install:
@@ -112,18 +112,3 @@ node_types:
               default:
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
-      cloudify.interfaces.lifecycle:
-        start: 
-          implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
-          inputs:
-            service_url:
-              description: >
-                The url to hostpool service
-              type: string
-        delete: 
-          implementation: hostpool.cloudify_hostpool_plugin.tasks.release
-          inputs:
-            service_url:
-              description: >
-                The url to hostpool service
-              type: string
