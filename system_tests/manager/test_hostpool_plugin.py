@@ -33,6 +33,8 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
         self._install_host_pool_service()
         self._test_nodecellar_impl(
             'examples/nodecellar/host-pool-blueprint.yaml')
+        self._teardown_pool()
+        self._uninstall_host_pool_service()
 
     def assert_monitoring_data_exists(self):
         # this blueprint does not define monitoring
@@ -40,21 +42,38 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
 
     def _provision_pool(self):
 
+        self.password_pool_host = util.generate_password()
+
+        def _render_password_authentication_script():
+
+            script_template = resources.get_resource(
+                'enable_password_authentication.sh.template')
+            return util.render_template(
+                template_path=script_template,
+                password=self.password_pool_host)
+
         blueprint_path = resources.get_resource(
             'pool-blueprint/pool-blueprint.yaml')
         self.blueprint_yaml = blueprint_path
 
         blueprint_id = '{0}-pool-blueprint'.format(self.test_id)
         deployment_id = '{0}-pool-deployment'.format(self.test_id)
+
+        script = _render_password_authentication_script()
+
         self.upload_deploy_and_execute_install(
             blueprint_id=blueprint_id,
             deployment_id=deployment_id,
             inputs={
                 'image': self.env.ubuntu_image_id,
-                'flavor': self.env.small_flavor_id
+                'flavor': self.env.small_flavor_id,
+                'enable_password_authentication_script': script
             }
         )
         self.pool_deployment_id = deployment_id
+
+    def _teardown_pool(self):
+        self.execute_uninstall(self.pool_deployment_id)
 
     def _install_host_pool_service(self):
 
@@ -73,7 +92,8 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
                 ip_pool_host_1=hosts['host_1']['ip'],
                 ip_pool_host_2=hosts['host_2']['ip'],
                 public_address_pool_host_1=hosts['host_1']['public_address'],
-                public_address_pool_host_2=hosts['host_2']['public_address']
+                public_address_pool_host_2=hosts['host_2']['public_address'],
+                password_pool_host=self.password_pool_host
             )
 
         def _render_agent_key():
@@ -126,6 +146,9 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
                 os.remove(generated_pool)
 
         self.host_pool_service_deployment_id = deployment_id
+
+    def _uninstall_host_pool_service(self):
+        self.execute_uninstall(self.host_pool_service_deployment_id)
 
     @property
     def expected_nodes_count(self):

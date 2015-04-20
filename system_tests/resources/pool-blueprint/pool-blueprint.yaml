@@ -21,6 +21,10 @@ inputs:
     description: >
       Flavor of the agent VM's
 
+  enable_password_authentication_script:
+    description: >
+      Script for enabling password authentication on hosts.
+
 node_templates:
 
   ##################################################################
@@ -37,6 +41,7 @@ node_templates:
       server:
         image: { get_input: image }
         flavor: { get_input: flavor }
+        userdata: { get_input: enable_password_authentication_script }
     relationships:
       - target: floatingip_1
         type: cloudify.openstack.server_connected_to_floating_ip
