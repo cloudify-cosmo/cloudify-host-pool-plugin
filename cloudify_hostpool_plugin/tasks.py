@@ -42,7 +42,7 @@ def acquire(service_url, **kwargs):
 @operation
 def release(service_url, **kwargs):
     ctx.logger.info('Release host')
-    host_id = ctx.instance.runtime_properties['host']['host_id']
+    host_id = ctx.instance.runtime_properties['host_id']
     response = requests.delete('{0}/hosts/{1}'.format(service_url, host_id))
     ctx.logger.debug('Response received: {0}'.format(str(response)))
     if not response.ok:
