@@ -173,7 +173,7 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
 
     @property
     def repo_branch(self):
-        return 'CFY-2209-system-tests'
+        return 'CFY-2209-add-nodecellar-system-test'
 
     def get_inputs(self):
 
