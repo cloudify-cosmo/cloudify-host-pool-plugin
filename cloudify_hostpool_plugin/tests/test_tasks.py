@@ -123,8 +123,8 @@ class TestTasks(unittest.TestCase):
         with open(self.keyfile, 'w') as f:
             f.write(self.key_content)
         service_url = 'http://test_url'
-        self.ctx.instance.runtime_properties['host'] = \
-            self.good_response_acquire_key
+        self.ctx.instance.runtime_properties['host_id'] = \
+            self.good_response_acquire_key['host_id']
         self.ctx.instance.runtime_properties['key'] = self.keyfile
         with requests_mock.mock() as m:
             m.delete('{0}/hosts/{1}'.format(service_url, self.host_id),
@@ -134,8 +134,8 @@ class TestTasks(unittest.TestCase):
         self.assertFalse(os.path.exists(self.keyfile))
 
     def test_release_bad_response(self):
-        self.ctx.instance.runtime_properties['host'] = \
-            self.good_response_acquire_key
+        self.ctx.instance.runtime_properties['host_id'] = \
+            self.good_response_acquire_key['host_id']
         with requests_mock.mock() as m:
             m.delete('{0}/hosts/{1}'.format(self.service_url, self.host_id),
                      content="",
