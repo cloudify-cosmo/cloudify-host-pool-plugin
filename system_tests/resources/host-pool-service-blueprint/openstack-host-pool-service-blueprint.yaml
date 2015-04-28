@@ -26,15 +26,11 @@ node_templates:
   host_pool_service_host:
     type: cloudify.openstack.nodes.Server
     properties:
-      server:
-        image: { get_input: image }
-        flavor: { get_input: flavor }
+      image: { get_input: image }
+      flavor: { get_input: flavor }
     relationships:
       - target: host_pool_service_security_group
         type: cloudify.openstack.server_connected_to_security_group
-      - target: host_pool_service_floating_ip
-        type: cloudify.openstack.server_connected_to_floating_ip
-
 
   host_pool_service:
     type: cloudify.nodes.HostPoolService
@@ -57,13 +53,6 @@ node_templates:
       rules:
         - remote_ip_prefix: 0.0.0.0/0
           port: { get_property: [ host_pool_service, port ] }
-
-  ##################################################
-  # enable access to the service from the internet.
-  ##################################################
-
-  host_pool_service_floating_ip:
-    type: cloudify.openstack.nodes.FloatingIP
 
 outputs:
   endpoint:

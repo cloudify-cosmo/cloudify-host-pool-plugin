@@ -25,6 +25,18 @@ inputs:
     description: >
       Script for enabling password authentication on hosts.
 
+node_types:
+
+  pool.Host:
+    derived_from: cloudify.openstack.nodes.Server
+    properties:
+      install_agent:
+        default: false
+      image:
+        default: { get_input: image }
+      flavor:
+        default: { get_input: flavor }
+
 node_templates:
 
   ##################################################################
@@ -35,12 +47,9 @@ node_templates:
   ##################################################################
 
   pool_host_1:
-    type: cloudify.openstack.nodes.Server
+    type: pool.Host
     properties:
-      install_agent: false
       server:
-        image: { get_input: image }
-        flavor: { get_input: flavor }
         userdata: { get_input: enable_password_authentication_script }
     relationships:
       - target: floatingip_1
@@ -58,12 +67,7 @@ node_templates:
   ##################################################################
 
   pool_host_2:
-    type: cloudify.openstack.nodes.Server
-    properties:
-      install_agent: false
-      server:
-        image: { get_input: image }
-        flavor: { get_input: flavor }
+    type: pool.Host
     relationships:
       - target: floatingip_2
         type: cloudify.openstack.server_connected_to_floating_ip

@@ -13,6 +13,7 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
+import shutil
 import os
 
 from cosmo_tester.test_suites.test_blueprints import nodecellar_test
@@ -77,7 +78,7 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
 
     def _install_host_pool_service(self):
 
-        def _render_pool():
+        def _render_pool(_runtime_blueprint_directory):
 
             hosts = self.client.deployments.outputs.get(
                 deployment_id=self.pool_deployment_id).outputs['hosts']
@@ -87,7 +88,7 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
             util.render_template_to_file(
                 template_path=pool_template,
                 file_path=os.path.join(
-                    os.path.dirname(pool_template),
+                    _runtime_blueprint_directory,
                     'pool.yaml'),
                 ip_pool_host_1=hosts['host_1']['ip'],
                 ip_pool_host_2=hosts['host_2']['ip'],
@@ -96,7 +97,7 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
                 password_pool_host=self.password_pool_host
             )
 
-        def _render_agent_key():
+        def _render_agent_key(_runtime_blueprint_directory):
 
             with open(util.get_actual_keypath(
                     self.env,
@@ -108,42 +109,40 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
             util.render_template_to_file(
                 template_path=key_template,
                 file_path=os.path.join(
-                    os.path.dirname(key_template),
+                    _runtime_blueprint_directory,
+                    'keys',
                     'agent_key.pem'),
                 agent_private_key_file_content=key_content
             )
 
-        _render_pool()
-        _render_agent_key()
+        # copy directory outside of source control since
+        # we will be adding files to it.
+        blueprint_directory = resources.get_resource(
+            'host-pool-service-blueprint')
+        runtime_blueprint_directory = os.path.join(
+            self.workdir, 'host-pool-service-blueprint')
+        shutil.copytree(src=blueprint_directory,
+                        dst=runtime_blueprint_directory)
 
-        blueprint_path = resources.get_resource(
-            'host-pool-service-blueprint/openstack-host-'
-            'pool-service-blueprint.yaml')
-        self.blueprint_yaml = blueprint_path
+        _render_pool(runtime_blueprint_directory)
+        _render_agent_key(runtime_blueprint_directory)
+
+        self.blueprint_yaml = os.path.join(
+            runtime_blueprint_directory,
+            'openstack-host-pool-service-blueprint.yaml'
+        )
 
         blueprint_id = '{0}-host-pool-service-blueprint'.format(self.test_id)
         deployment_id = '{0}-host-pool-service-deployment'.format(
             self.test_id)
-        try:
-            self.upload_deploy_and_execute_install(
-                blueprint_id=blueprint_id,
-                deployment_id=deployment_id,
-                inputs={
-                    'image': self.env.ubuntu_image_id,
-                    'flavor': self.env.small_flavor_id
-                }
-            )
-        finally:
-
-            # remove the key and pool generated files
-            generated_key = resources.get_resource(
-                'host-pool-service-blueprint/keys/agent_key.pem')
-            generated_pool = resources.get_resource(
-                'host-pool-service-blueprint/pool.yaml')
-            if os.path.exists(generated_key):
-                os.remove(generated_key)
-            if os.path.exists(generated_pool):
-                os.remove(generated_pool)
+        self.upload_deploy_and_execute_install(
+            blueprint_id=blueprint_id,
+            deployment_id=deployment_id,
+            inputs={
+                'image': self.env.ubuntu_image_id,
+                'flavor': self.env.small_flavor_id
+            }
+        )
 
         self.host_pool_service_deployment_id = deployment_id
 
