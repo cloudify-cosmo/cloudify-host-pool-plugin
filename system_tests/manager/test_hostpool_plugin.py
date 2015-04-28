@@ -24,7 +24,7 @@ from system_tests import resources
 REPO_URL = 'https://github.com/cloudify-cosmo/cloudify-host-pool-plugin.git'
 
 
-os.environ['HANDLER_CONFIGURATION'] = '/home/elip/dev/system-tests-handlers/hp-openstack-region-b-dev2-handler.yaml'
+os.environ['HANDLER_CONFIGURATION'] = '/home/elip/dev/system-tests-handlers/lab-openstack-eli-handler.yaml'
 
 
 class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):

@@ -58,5 +58,5 @@ outputs:
   endpoint:
     description: Host Pool Service Endpoint
     value:
-      ip_address: { get_attribute: [host_pool_service_floating_ip, floating_ip_address] }
+      ip_address: { get_attribute: [host_pool_service_host, ip] }
       port: { get_property: [host_pool_service, port] }
