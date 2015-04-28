@@ -1,0 +1,126 @@
+##################################################################
+# this blueprint is used for provisioning hosts that will serve
+# as the host-pool for running cloudify-host-pool-plugin tests
+##################################################################
+
+tosca_definitions_version: cloudify_dsl_1_0
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/3.2rc1/types.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/1.2rc1/plugin.yaml
+
+inputs:
+
+  image:
+    description: >
+      Image to be used when launching agent VM's
+
+  flavor:
+    description: >
+      Flavor of the agent VM's
+
+  enable_password_authentication_script:
+    description: >
+      Script for enabling password authentication on hosts.
+
+node_types:
+
+  pool.Host:
+    derived_from: cloudify.openstack.nodes.Server
+    properties:
+      install_agent:
+        default: false
+      image:
+        default: { get_input: image }
+      flavor:
+        default: { get_input: flavor }
+
+node_templates:
+
+  ##################################################################
+  # Host number 1. Note that we connect a floating ip and
+  # both security groups to this host because we have no way of
+  # knowing which host will be assigned to the nodejs and which to
+  # the mongod
+  ##################################################################
+
+  pool_host_1:
+    type: pool.Host
+    properties:
+      server:
+        userdata: { get_input: enable_password_authentication_script }
+    relationships:
+      - target: floatingip_1
+        type: cloudify.openstack.server_connected_to_floating_ip
+      - target: nodecellar_security_group
+        type: cloudify.openstack.server_connected_to_security_group
+      - target: mongod_security_group
+        type: cloudify.openstack.server_connected_to_security_group
+
+  ##################################################################
+  # Host number 2. Note that we connect a floating ip and
+  # both security groups to this host because we have no way of
+  # knowing which host will be assigned to the nodejs and which to
+  # the mongod
+  ##################################################################
+
+  pool_host_2:
+    type: pool.Host
+    relationships:
+      - target: floatingip_2
+        type: cloudify.openstack.server_connected_to_floating_ip
+      - target: nodecellar_security_group
+        type: cloudify.openstack.server_connected_to_security_group
+      - target: mongod_security_group
+        type: cloudify.openstack.server_connected_to_security_group
+
+  floatingip_1:
+    type: cloudify.openstack.nodes.FloatingIP
+
+  floatingip_2:
+    type: cloudify.openstack.nodes.FloatingIP
+
+  ###########################################################
+  # A security group to enable access to the nodejs host
+  # using the port of the nodecellar application.
+  ###########################################################
+
+  nodecellar_security_group:
+    type: cloudify.openstack.nodes.SecurityGroup
+    properties:
+      security_group:
+        name: nodecellar_security_group
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          port: 8080
+
+  ###########################################################
+  # A security group to enable access to the mongo host
+  # using the port of the mongo node.
+  #
+  # We need this so that the nodecellar application can
+  # comminicate with MongoDB, since they are running on
+  # different hosts.
+  ###########################################################
+
+  mongod_security_group:
+    type: cloudify.openstack.nodes.SecurityGroup
+    properties:
+      security_group:
+        name: mongod_security_group
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          port: 27017
+        - remote_ip_prefix: 0.0.0.0/0
+          port: 28017
+
+outputs:
+  hosts:
+    description: Hosts description of the pool
+    value:
+      host_1:
+        ip: { get_attribute: [pool_host_1, ip] }
+        public_address: { get_attribute: [floatingip_1, floating_ip_address] }
+      host_2:
+        ip: { get_attribute: [pool_host_2, ip] }
+        public_address: { get_attribute: [floatingip_2, floating_ip_address] }

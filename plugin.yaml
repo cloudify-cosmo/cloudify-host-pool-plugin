@@ -5,7 +5,7 @@
 plugins:
   hostpool:
     executor: central_deployment_agent
-    source: https://github.com/cloudify-cosmo/cloudify-host-pool-plugin/archive/master.zip
+    source: https://github.com/cloudify-cosmo/cloudify-host-pool-plugin/archive/CFY-2209-add-nodecellar-system-test.zip
 
 node_types:
   cloudify.hostpool.nodes.Host:
@@ -65,7 +65,7 @@ node_types:
               description: >
                 The url to hostpool service
               type: string
-        delete: 
+        delete:
           implementation: hostpool.cloudify_hostpool_plugin.tasks.release
           inputs:
             service_url:

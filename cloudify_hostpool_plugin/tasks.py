@@ -22,6 +22,11 @@ from cloudify.exceptions import NonRecoverableError
 from cloudify.decorators import operation
 
 
+RUNTIME_PROPERTIES_KEYS = [
+    'ip', 'user', 'port', 'password', 'key', 'host_id', 'public_address'
+]
+
+
 @operation
 def acquire(service_url, **kwargs):
     ctx.logger.info('Acquire host')
@@ -50,6 +55,7 @@ def release(service_url, **kwargs):
     key_file = ctx.instance.runtime_properties.get('key')
     if key_file and os.path.exists(key_file):
         os.unlink(key_file)
+    _delete_runtime_properties()
 
 
 def _save_keyfile(key_content, host_id):
@@ -79,3 +85,9 @@ def _set_runtime_properties(host, key_path):
     ctx.instance.runtime_properties['password'] = \
         host['auth'].get('password')
     ctx.instance.runtime_properties['key'] = key_path
+
+
+def _delete_runtime_properties():
+    for runtime_prop_key in RUNTIME_PROPERTIES_KEYS:
+        if runtime_prop_key in ctx.instance.runtime_properties:
+            del ctx.instance.runtime_properties[runtime_prop_key]
