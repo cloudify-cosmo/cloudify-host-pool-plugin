@@ -22,9 +22,6 @@ from cosmo_tester.framework import util
 from system_tests import resources
 
 
-os.environ['HANDLER_CONFIGURATION'] = '/home/elip/dev/system-tests-handlers/lab-openstack-eli-handler.yaml'
-
-
 class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
 
     def test_nodecellar_hostpool(self):
@@ -162,10 +159,6 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
     @property
     def entrypoint_property_name(self):
         return 'public_address'
-
-    @property
-    def repo_branch(self):
-        return 'CFY-2209-host-pool-blueprint'
 
     def get_inputs(self):
 
