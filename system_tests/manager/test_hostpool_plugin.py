@@ -21,8 +21,6 @@ from cosmo_tester.framework import util
 
 from system_tests import resources
 
-REPO_URL = 'https://github.com/cloudify-cosmo/cloudify-host-pool-plugin.git'
-
 
 os.environ['HANDLER_CONFIGURATION'] = '/home/elip/dev/system-tests-handlers/lab-openstack-eli-handler.yaml'
 
@@ -32,8 +30,7 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
     def test_nodecellar_hostpool(self):
         self._provision_pool()
         self._install_host_pool_service()
-        self._test_nodecellar_impl(
-            'examples/nodecellar/host-pool-blueprint.yaml')
+        self._test_nodecellar_impl('host-pool-blueprint.yaml')
         self._teardown_pool()
         self._uninstall_host_pool_service()
 
@@ -167,12 +164,8 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
         return 'public_address'
 
     @property
-    def repo_url(self):
-        return REPO_URL
-
-    @property
     def repo_branch(self):
-        return 'CFY-2209-add-nodecellar-system-test'
+        return 'CFY-2209-host-pool-blueprint'
 
     def get_inputs(self):
 
