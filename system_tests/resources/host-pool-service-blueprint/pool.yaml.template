@@ -9,7 +9,7 @@ hosts:
   - host: {{ ip_pool_host_1 }}
     public_address: {{ public_address_pool_host_1 }}
     auth:
-      password: {{ password_pool_host }}
+      password: "{{ password_pool_host }}"
 
   - host: {{ ip_pool_host_2 }}
     public_address: {{ public_address_pool_host_2 }}
