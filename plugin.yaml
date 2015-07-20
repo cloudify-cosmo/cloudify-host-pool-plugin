@@ -13,43 +13,43 @@ node_types:
     interfaces:
       cloudify.interfaces.worker_installer:
         install:
-          implementation: agent_installer.worker_installer.tasks.install
+          implementation: agent.worker_installer.tasks.install
           inputs:
-            cloudify_agent: 
+            cloudify_agent:
               default:
                 user: { get_attribute: [SELF, user] }
                 key: { get_attribute: [SELF, key] }
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
         start:
-          implementation: agent_installer.worker_installer.tasks.start
+          implementation: agent.worker_installer.tasks.start
           inputs:
-            cloudify_agent: 
+            cloudify_agent:
               default:
                 user: { get_attribute: [SELF, user] }
                 key: { get_attribute: [SELF, key] }
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
         stop:
-          implementation: agent_installer.worker_installer.tasks.stop
+          implementation: agent.worker_installer.tasks.stop
           inputs:
-            cloudify_agent: 
+            cloudify_agent:
               default:
                 user: { get_attribute: [SELF, user] }
                 key: { get_attribute: [SELF, key] }
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
         uninstall:
-          implementation: agent_installer.worker_installer.tasks.uninstall
+          implementation: agent.worker_installer.tasks.uninstall
           inputs:
-            cloudify_agent: 
+            cloudify_agent:
               default:
                 user: { get_attribute: [SELF, user] }
                 key: { get_attribute: [SELF, key] }
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
         restart:
-          implementation: agent_installer.worker_installer.tasks.restart
+          implementation: agent.worker_installer.tasks.restart
           inputs:
             cloudify_agent:
               default:
@@ -78,35 +78,35 @@ node_types:
     interfaces:
       cloudify.interfaces.worker_installer:
         install:
-          implementation: windows_agent_installer.windows_agent_installer.tasks.install
+          implementation: agent.windows_agent_installer.tasks.install
           inputs:
-            cloudify_agent: 
+            cloudify_agent:
               default:
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
         start:
-          implementation: windows_agent_installer.windows_agent_installer.tasks.start
+          implementation: agent.windows_agent_installer.tasks.start
           inputs:
-            cloudify_agent: 
+            cloudify_agent:
               default:
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
         stop:
-          implementation: windows_agent_installer.windows_agent_installer.tasks.stop
+          implementation: agent.windows_agent_installer.tasks.stop
           inputs:
-            cloudify_agent: 
+            cloudify_agent:
               default:
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
         uninstall:
-          implementation: windows_agent_installer.windows_agent_installer.tasks.uninstall
+          implementation: agent.windows_agent_installer.tasks.uninstall
           inputs:
-            cloudify_agent: 
+            cloudify_agent:
               default:
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
         restart:
-          implementation: windows_agent_installer.windows_agent_installer.tasks.restart
+          implementation: agent.windows_agent_installer.tasks.restart
           inputs:
             cloudify_agent:
               default:
