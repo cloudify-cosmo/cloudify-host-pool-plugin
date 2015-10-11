@@ -60,7 +60,7 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
             blueprint_id=blueprint_id,
             deployment_id=deployment_id,
             inputs={
-                'image': self.env.ubuntu_image_id,
+                'image': self.env.ubuntu_trusty_image_id,
                 'flavor': self.env.small_flavor_id,
                 'enable_password_authentication_script': script
             }
@@ -133,7 +133,7 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
             blueprint_id=blueprint_id,
             deployment_id=deployment_id,
             inputs={
-                'image': self.env.ubuntu_image_id,
+                'image': self.env.ubuntu_trusty_image_id,
                 'flavor': self.env.small_flavor_id
             }
         )
