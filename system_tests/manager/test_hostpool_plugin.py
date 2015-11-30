@@ -152,14 +152,6 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
         return ['ip', 'user', 'port', 'host_id', 'public_address',
                 'password', 'key']
 
-    @property
-    def entrypoint_node_name(self):
-        return 'nodejs_host'
-
-    @property
-    def entrypoint_property_name(self):
-        return 'public_address'
-
     def get_inputs(self):
 
         # the host pool endpoint can be retrieved by getting the deployment
