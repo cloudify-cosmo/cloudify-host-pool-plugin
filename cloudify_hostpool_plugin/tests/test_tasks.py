@@ -23,6 +23,7 @@ import requests_mock
 from cloudify.mocks import MockCloudifyContext
 from cloudify_hostpool_plugin import tasks
 from cloudify.exceptions import NonRecoverableError
+from cloudify.state import current_ctx
 
 
 class TestTasks(unittest.TestCase):
@@ -32,6 +33,7 @@ class TestTasks(unittest.TestCase):
         self.ctx = MockCloudifyContext(node_id='test_id',
                                        node_name='test_name',
                                        runtime_properties={})
+        current_ctx.set(self.ctx)
         self.service_url = 'http://test_url'
         self.error = 'Something went wrong'
         self.error_code = requests.codes.INTERNAL_SERVER_ERROR
@@ -62,6 +64,7 @@ class TestTasks(unittest.TestCase):
                                'code': self.error_code}
 
     def tearDown(self):
+        current_ctx.clear()
         if os.path.exists(self.keyfile):
             os.unlink(self.keyfile)
 
