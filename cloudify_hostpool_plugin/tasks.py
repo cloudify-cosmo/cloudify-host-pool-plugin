@@ -55,12 +55,14 @@ def acquire(service_url, **_):
 
             _set_runtime_properties(host, key_path)
         else:
+            ctx.logger.info('_handle_error(%s)' % response)
             _handle_error(response)
     except Timeout as ex:
         # Catch ConnectTimeout & ReadTimeout errors
         RecoverableError('Timeout acquiring a host: %s' % ex)
     except RequestException as ex:
         # Catastrophic network error
+        ctx.logger.info('RequestException: %s' % ex)
         NonRecoverableError('Fatal network error acquiring host: %s' % ex)
 
 
@@ -110,15 +112,16 @@ def _handle_error(response):
 
 def _set_runtime_properties(host, key_path):
     '''Sets runtime properties for the acquired host'''
-    ctx.instance.runtime_properties['host_id'] = host['host_id']
-    ctx.instance.runtime_properties['ip'] = host['host']
-    ctx.instance.runtime_properties['port'] = host['port']
+    ctx.instance.runtime_properties['host_id'] = host.get('host_id')
+    ctx.instance.runtime_properties['ip'] = host.get('host')
+    ctx.instance.runtime_properties['port'] = host.get('port')
     ctx.instance.runtime_properties['user'] = \
         host.get('auth', dict()).get('username')
     ctx.instance.runtime_properties['password'] = \
         host.get('auth', dict()).get('password')
     ctx.instance.runtime_properties['key'] = key_path
-    ctx.instance.runtime_properties['public_address'] = host['public_address']
+    ctx.instance.runtime_properties['public_address'] = \
+        host.get('public_address')
 
 
 def _delete_runtime_properties():
