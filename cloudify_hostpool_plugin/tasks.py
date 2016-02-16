@@ -110,9 +110,9 @@ def _handle_error(response):
 
 def _set_runtime_properties(host, key_path):
     '''Sets runtime properties for the acquired host'''
-    ctx.instance.runtime_properties['host_id'] = host.get['host_id']
-    ctx.instance.runtime_properties['ip'] = host.get['host']
-    ctx.instance.runtime_properties['port'] = host.get['port']
+    ctx.instance.runtime_properties['host_id'] = host['host_id']
+    ctx.instance.runtime_properties['ip'] = host['host']
+    ctx.instance.runtime_properties['port'] = host['port']
     ctx.instance.runtime_properties['user'] = \
         host.get('auth', dict()).get('username')
     ctx.instance.runtime_properties['password'] = \
