@@ -88,7 +88,6 @@ node_types:
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
-                protocol: { get_attribute: [SELF, protocol] }
         start:
           implementation: agent.windows_agent_installer.tasks.start
           inputs:
@@ -98,7 +97,6 @@ node_types:
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
-                protocol: { get_attribute: [SELF, protocol] }
         stop:
           implementation: agent.windows_agent_installer.tasks.stop
           inputs:
@@ -108,7 +106,6 @@ node_types:
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
-                protocol: { get_attribute: [SELF, protocol] }
         uninstall:
           implementation: agent.windows_agent_installer.tasks.uninstall
           inputs:
@@ -118,7 +115,6 @@ node_types:
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
-                protocol: { get_attribute: [SELF, protocol] }
         restart:
           implementation: agent.windows_agent_installer.tasks.restart
           inputs:
@@ -128,4 +124,3 @@ node_types:
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
-                protocol: { get_attribute: [SELF, protocol] }
