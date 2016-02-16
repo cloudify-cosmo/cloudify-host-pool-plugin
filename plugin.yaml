@@ -5,7 +5,7 @@
 plugins:
   hostpool:
     executor: central_deployment_agent
-    source: https://github.com/cloudify-cosmo/cloudify-host-pool-plugin/archive/1.3.1.zip
+    source: https://github.com/01000101/cloudify-host-pool-plugin/archive/CFY-4931.zip
     package_name: cloudify-host-pool-plugin
     package_version: '1.3.1'
 
@@ -84,38 +84,48 @@ node_types:
           inputs:
             cloudify_agent:
               default:
+                windows: true
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
+                protocol: { get_attribute: [SELF, protocol] }
         start:
           implementation: agent.windows_agent_installer.tasks.start
           inputs:
             cloudify_agent:
               default:
+                windows: true
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
+                protocol: { get_attribute: [SELF, protocol] }
         stop:
           implementation: agent.windows_agent_installer.tasks.stop
           inputs:
             cloudify_agent:
               default:
+                windows: true
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
+                protocol: { get_attribute: [SELF, protocol] }
         uninstall:
           implementation: agent.windows_agent_installer.tasks.uninstall
           inputs:
             cloudify_agent:
               default:
+                windows: true
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
+                protocol: { get_attribute: [SELF, protocol] }
         restart:
           implementation: agent.windows_agent_installer.tasks.restart
           inputs:
             cloudify_agent:
               default:
+                windows: true
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
+                protocol: { get_attribute: [SELF, protocol] }
