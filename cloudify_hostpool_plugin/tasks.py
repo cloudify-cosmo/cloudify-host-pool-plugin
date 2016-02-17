@@ -1,8 +1,4 @@
-'''
-    tasks
-    ~~~~~
-    Handles host allocation and deallocation
-'''
+# #######
 # Copyright (c) 2015 GigaSpaces Technologies Ltd. All rights reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +12,11 @@
 # * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # * See the License for the specific language governing permissions and
 # * limitations under the License.
+'''
+    tasks
+    ~~~~~
+    Handles host allocation and deallocation
+'''
 
 import os
 import requests
@@ -26,6 +27,8 @@ from cloudify import ctx
 from cloudify.exceptions import NonRecoverableError, RecoverableError
 from cloudify.decorators import operation
 
+# pylint: disable=E1101
+# Harmless warning due to the dynamically-generated LookupDict
 
 RUNTIME_PROPERTIES_KEYS = [
     'ip', 'user', 'port',
@@ -37,63 +40,62 @@ RUNTIME_PROPERTIES_KEYS = [
 @operation
 def acquire(service_url, **_):
     '''Acquire a host for the user'''
-    ctx.logger.info('Acquire host')
+    ctx.logger.info('Acquiring host')
     try:
-        response = requests.post('%s/hosts' % service_url)
-        ctx.logger.debug('Response received: %s', response.text)
-
-        # pylint: disable=E1101
-        # Harmless warning due to the dynamically-generated LookupDict
-        if response.status_code == requests.codes.CREATED:
-            host = response.json()
-            ctx.logger.info('Acquired host: %s', host['host'])
-
-            key_content = host['auth'].get('keyfile')
-            key_path = None
-            if key_content:
-                key_path = _save_keyfile(key_content, host['host_id'])
-
-            _set_runtime_properties(host, key_path)
-        else:
-            ctx.logger.info('_handle_error(%s)' % response)
-            _handle_error(response)
-    except Timeout as ex:
+        response = requests.post('{0}/hosts'.format(service_url))
+        ctx.logger.debug('Response received: {0}'.format(response.text))
+    except Timeout:
         # Catch ConnectTimeout & ReadTimeout errors
-        RecoverableError('Timeout acquiring a host: %s' % ex)
-    except RequestException as ex:
+        raise RecoverableError('Timeout acquiring host')
+    except RequestException:
         # Catastrophic network error
-        ctx.logger.info('RequestException: %s' % ex)
-        NonRecoverableError('Fatal network error acquiring host: %s' % ex)
+        raise NonRecoverableError('Fatal network error acquiring host')
+
+    # Handle bad responses
+    if response.status_code != requests.codes.CREATED:
+        _handle_error(response)
+
+    host = response.json()
+    ctx.logger.info('Acquired host: {0}'.format(host['host']))
+
+    key_content = host.get('auth', dict()).get('keyfile')
+    key_path = None
+    if key_content:
+        key_path = _save_keyfile(key_content, host['host_id'])
+
+    _set_runtime_properties(host, key_path)
 
 
 @operation
 def release(service_url, **_):
     '''Release a host from use by the user'''
-    ctx.logger.info('Release host')
+    ctx.logger.info('Releasing host')
     host_id = ctx.instance.runtime_properties['host_id']
     try:
-        response = requests.delete('%s/hosts/%s' % (service_url, host_id))
-        ctx.logger.debug('Response received: %s', str(response))
-
-        if not response.ok:
-            _handle_error(response)
-
-        key_file = ctx.instance.runtime_properties['key']
-        if key_file and os.path.exists(key_file):
-            os.unlink(key_file)
-
-        _delete_runtime_properties()
-    except Timeout as ex:
+        response = requests.delete('{0}/hosts/{1}'
+                                   .format(service_url, host_id))
+        ctx.logger.debug('Response received: {0}'.format(response))
+    except Timeout:
         # Catch ConnectTimeout & ReadTimeout errors
-        RecoverableError('Timeout acquiring a host: %s' % ex)
-    except RequestException as ex:
+        raise RecoverableError('Timeout releasing host')
+    except RequestException:
         # Catastrophic network error
-        NonRecoverableError('Fatal network error acquiring host: %s' % ex)
+        raise NonRecoverableError('Fatal network error releasing host')
+
+    # Handle bad responses
+    if not response.ok:
+        _handle_error(response)
+
+    key_file = ctx.instance.runtime_properties['key']
+    if key_file and os.path.exists(key_file):
+        os.unlink(key_file)
+
+    _delete_runtime_properties()
 
 
 def _save_keyfile(key_content, host_id):
     '''Write host SSH key to ~/.ssh'''
-    key_path = os.path.expanduser('~/.ssh/key_%s' % host_id)
+    key_path = os.path.expanduser('~/.ssh/key_{0}'.format(host_id))
     with open(key_path, 'w') as f_key:
         f_key.write(key_content)
     os.chmod(key_path, stat.S_IRUSR | stat.S_IWUSR)
@@ -107,7 +109,7 @@ def _handle_error(response):
     except ValueError:
         reason = response.reason
     raise NonRecoverableError(
-        'Error: %s, Reason: %s' % (response.status_code, reason))
+        'Error: {0}, Reason: {1}'.format(response.status_code, reason))
 
 
 def _set_runtime_properties(host, key_path):
