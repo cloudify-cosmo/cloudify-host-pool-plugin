@@ -1,8 +1,4 @@
-'''
-    tests.tasks
-    ~~~~~~~~~~~
-    Tests host allocation and deallocation
-'''
+# #######
 # Copyright (c) 2015 GigaSpaces Technologies Ltd. All rights reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +15,11 @@
 
 # pylint: disable=E1101
 # Harmless warning due to the dynamically-generated LookupDict
+'''
+    tests.tasks
+    ~~~~~~~~~~~
+    Tests host allocation and deallocation
+'''
 
 import os
 import unittest
@@ -37,7 +38,7 @@ from cloudify.state import current_ctx
 HOST_ID = '12345-abcde-98765-00000-edcba'
 SERVICE_URL = 'hostpool-svc.mock.com'
 SERVICE_PORT = 8080
-SERVICE_ENDPOINT = 'mock://%s:%s' % (SERVICE_URL, SERVICE_PORT)
+SERVICE_ENDPOINT = 'mock://{0}:{1}'.format(SERVICE_URL, SERVICE_PORT)
 
 MockOptions = namedtuple('MockOptions', [
     'host', 'port', 'host_id',
@@ -63,7 +64,7 @@ class AcquireHostTestCase(unittest.TestCase):
             port=22,
             username='my-username',
             password='my-p@ssw0rd',
-            keyfile=os.path.expanduser('~/.ssh/key_%s' % HOST_ID),
+            keyfile=os.path.expanduser('~/.ssh/key_{0}'.format(HOST_ID)),
             keyfile_content='=====BEGIN=====SOME$TEST@DATA=====END=====',
             error='Something went wrong!',
             error_code=requests.codes.INTERNAL_SERVER_ERROR,
@@ -83,7 +84,7 @@ class AcquireHostTestCase(unittest.TestCase):
         '''POST /hosts with success response (using password auth)'''
         mock.register_uri(
             'POST',
-            '%s/hosts' % self.endpoint,
+            '{0}/hosts'.format(self.endpoint),
             json={
                 'host': self.opts.host,
                 'port': self.opts.port,
@@ -110,7 +111,7 @@ class AcquireHostTestCase(unittest.TestCase):
         '''POST /hosts with success response (using key auth)'''
         mock.register_uri(
             'POST',
-            '%s/hosts' % self.endpoint,
+            '{0}/hosts'.format(self.endpoint),
             json={
                 'host': self.opts.host,
                 'port': self.opts.port,
@@ -138,13 +139,13 @@ class AcquireHostTestCase(unittest.TestCase):
         '''POST /hosts with failure response'''
         mock.register_uri(
             'POST',
-            '%s/hosts' % self.endpoint,
+            '{0}/hosts'.format(self.endpoint),
             json=self.error_response,
             status_code=self.opts.error_code
         )
         self.assertRaisesRegexp(
             NonRecoverableError,
-            'Error: %s, Reason: %s' % (
+            'Error: {0}, Reason: {1}'.format(
                 self.opts.error_code,
                 self.error_response['error']),
             tasks.acquire,
@@ -168,7 +169,7 @@ class ReleaseHostTestCase(unittest.TestCase):
             port=22,
             username='my-username',
             password='my-p@ssw0rd',
-            keyfile=os.path.expanduser('~/.ssh/key_%s' % HOST_ID),
+            keyfile=os.path.expanduser('~/.ssh/key_{0}'.format(HOST_ID)),
             keyfile_content='=====BEGIN=====SOME$TEST@DATA=====END=====',
             error='Something went wrong!',
             error_code=requests.codes.INTERNAL_SERVER_ERROR,
@@ -193,7 +194,7 @@ class ReleaseHostTestCase(unittest.TestCase):
 
         mock.register_uri(
             'DELETE',
-            '%s/hosts/%s' % (self.endpoint, self.opts.host_id),
+            '{0}/hosts/{1}'.format(self.endpoint, self.opts.host_id),
             json={
                 'host': self.opts.host,
                 'port': self.opts.port,
@@ -211,13 +212,13 @@ class ReleaseHostTestCase(unittest.TestCase):
         self.ctx.instance.runtime_properties['host_id'] = self.opts.host_id
         mock.register_uri(
             'DELETE',
-            '%s/hosts/%s' % (self.endpoint, self.opts.host_id),
+            '{0}/hosts/{1}'.format(self.endpoint, self.opts.host_id),
             json=self.error_response,
             status_code=self.opts.error_code
         )
         self.assertRaisesRegexp(
             NonRecoverableError,
-            'Error: %s, Reason: %s' % (
+            'Error: {0}, Reason: {1}'.format(
                 self.opts.error_code,
                 self.error_response['error']),
             tasks.release,
