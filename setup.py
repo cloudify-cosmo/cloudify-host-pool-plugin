@@ -17,7 +17,7 @@ from setuptools import setup
 
 setup(
     name='cloudify-host-pool-plugin',
-    version='1.3.1',
+    version='1.4.dev0',
     license='LICENSE',
     packages=['cloudify_hostpool_plugin'],
     description='A Cloudify plugin enabling hosts acquisition '
