@@ -21,24 +21,24 @@
 
 import os
 import unittest
-from collections import namedtuple
-
-import requests
-import requests.exceptions
+import httplib
 import requests_mock
+
+from collections import namedtuple
+from urlparse import urlparse
 
 from cloudify.mocks import MockCloudifyContext
 from cloudify_hostpool_plugin import tasks
 from cloudify.exceptions import NonRecoverableError
 from cloudify.state import current_ctx
 
-HOST_ID = '12345-abcde-98765-00000-edcba'
+HOST_ID = 12345
 SERVICE_URL = 'hostpool-svc.mock.com'
 SERVICE_PORT = 8080
 SERVICE_ENDPOINT = 'mock://{0}:{1}'.format(SERVICE_URL, SERVICE_PORT)
 
 MockOptions = namedtuple('MockOptions', [
-    'host', 'port', 'host_id',
+    'host', 'port', 'protocol', 'host_id',
     'keyfile', 'keyfile_content',
     'username', 'password',
     'error', 'error_code', 'reason'
@@ -50,21 +50,27 @@ class AcquireHostTestCase(unittest.TestCase):
     def setUp(self):
         self.ctx = MockCloudifyContext(node_id='test_acquire_host',
                                        node_name='AcquireHostTestCase',
-                                       runtime_properties={})
+                                       runtime_properties={},
+                                       properties={})
         current_ctx.set(self.ctx)
         self.service_url = SERVICE_URL
         self.service_port = SERVICE_PORT
         self.endpoint = SERVICE_ENDPOINT
+        svc_urlparse = urlparse(self.endpoint)
         self.opts = MockOptions(
             host_id=HOST_ID,
             host='172.16.99.123',
             port=22,
+            protocol='ssh',
             username='my-username',
             password='my-p@ssw0rd',
-            keyfile=os.path.expanduser('~/.ssh/key_{0}'.format(HOST_ID)),
+            keyfile=os.path.expanduser('~/.ssh/key_{0}_{1}_{2}'.format(
+                svc_urlparse.hostname,
+                svc_urlparse.port,
+                HOST_ID)),
             keyfile_content='=====BEGIN=====SOME$TEST@DATA=====END=====',
             error='Something went wrong!',
-            error_code=requests.codes.INTERNAL_SERVER_ERROR,
+            error_code=httplib.INTERNAL_SERVER_ERROR,
             reason='A very detailed error reason'
         )
 
@@ -78,22 +84,26 @@ class AcquireHostTestCase(unittest.TestCase):
 
     @requests_mock.Mocker()
     def test_with_password_success(self, mock):
-        '''POST /hosts with success response (using password auth)'''
+        '''POST /host/allocate with success response (using password auth)'''
         mock.register_uri(
             'POST',
-            '{0}/hosts'.format(self.endpoint),
+            '{0}/host/allocate'.format(self.endpoint),
             json={
-                'host': self.opts.host,
-                'port': self.opts.port,
-                'host_id': self.opts.host_id,
-                'auth': {
+                'id': self.opts.host_id,
+                'os': 'linux',
+                'endpoint': {
+                    'ip': self.opts.host,
+                    'port': self.opts.port,
+                    'protocol': self.opts.protocol
+                },
+                'credentials': {
                     'username': self.opts.username,
                     'password': self.opts.password
                 }
             },
-            status_code=requests.codes.CREATED
+            status_code=httplib.OK
         )
-        tasks.acquire(self.endpoint, ctx=self.ctx)
+        tasks.acquire(self.endpoint, requested_os='linux', ctx=self.ctx)
         self.assertEqual(self.ctx.instance.runtime_properties['host_id'],
                          self.opts.host_id)
         self.assertEqual(self.ctx.instance.runtime_properties['user'],
@@ -105,22 +115,26 @@ class AcquireHostTestCase(unittest.TestCase):
 
     @requests_mock.Mocker()
     def test_with_keyfile_success(self, mock):
-        '''POST /hosts with success response (using key auth)'''
+        '''POST /host/allocate with success response (using key auth)'''
         mock.register_uri(
             'POST',
-            '{0}/hosts'.format(self.endpoint),
+            '{0}/host/allocate'.format(self.endpoint),
             json={
-                'host': self.opts.host,
-                'port': self.opts.port,
-                'host_id': self.opts.host_id,
-                'auth': {
+                'id': self.opts.host_id,
+                'os': 'linux',
+                'endpoint': {
+                    'ip': self.opts.host,
+                    'port': self.opts.port,
+                    'protocol': self.opts.protocol
+                },
+                'credentials': {
                     'username': self.opts.username,
-                    'keyfile': self.opts.keyfile
+                    'key': self.opts.keyfile_content
                 }
             },
-            status_code=requests.codes.CREATED
+            status_code=httplib.OK
         )
-        tasks.acquire(self.endpoint, ctx=self.ctx)
+        tasks.acquire(self.endpoint, requested_os='linux', ctx=self.ctx)
         self.assertEqual(self.ctx.instance.runtime_properties['host_id'],
                          self.opts.host_id)
         self.assertEqual(self.ctx.instance.runtime_properties['user'],
@@ -132,11 +146,27 @@ class AcquireHostTestCase(unittest.TestCase):
         self.assertTrue(os.path.exists(self.opts.keyfile))
 
     @requests_mock.Mocker()
+    def test_bad_os_type(self, mock):
+        '''POST /host/allocate with a non-string OS type'''
+        mock.register_uri(
+            'POST',
+            '{0}/host/allocate'.format(self.endpoint),
+            status_code=httplib.BAD_REQUEST
+        )
+        self.assertRaisesRegexp(
+            NonRecoverableError,
+            'Requested OS must be a string',
+            tasks.acquire,
+            self.endpoint,
+            ctx=self.ctx,
+            requested_os=1234)
+
+    @requests_mock.Mocker()
     def test_failure(self, mock):
         '''POST /hosts with failure response'''
         mock.register_uri(
             'POST',
-            '{0}/hosts'.format(self.endpoint),
+            '{0}/host/allocate'.format(self.endpoint),
             json=self.error_response,
             status_code=self.opts.error_code
         )
@@ -147,6 +177,7 @@ class AcquireHostTestCase(unittest.TestCase):
                 self.error_response['error']),
             tasks.acquire,
             self.endpoint,
+            requested_os='linux',
             ctx=self.ctx)
 
 
@@ -164,12 +195,13 @@ class ReleaseHostTestCase(unittest.TestCase):
             host_id=HOST_ID,
             host='172.16.99.123',
             port=22,
+            protocol='ssh',
             username='my-username',
             password='my-p@ssw0rd',
             keyfile=os.path.expanduser('~/.ssh/key_{0}'.format(HOST_ID)),
             keyfile_content='=====BEGIN=====SOME$TEST@DATA=====END=====',
             error='Something went wrong!',
-            error_code=requests.codes.INTERNAL_SERVER_ERROR,
+            error_code=httplib.INTERNAL_SERVER_ERROR,
             reason='A very detailed error reason'
         )
 
@@ -183,7 +215,7 @@ class ReleaseHostTestCase(unittest.TestCase):
 
     @requests_mock.Mocker()
     def test_success(self, mock):
-        '''DELETE /hosts with success response'''
+        '''DELETE /host/<host_id>/deallocate with success response'''
         with open(self.opts.keyfile, 'w') as f_key:
             f_key.write(self.opts.keyfile_content)
         self.ctx.instance.runtime_properties['host_id'] = self.opts.host_id
@@ -191,13 +223,10 @@ class ReleaseHostTestCase(unittest.TestCase):
 
         mock.register_uri(
             'DELETE',
-            '{0}/hosts/{1}'.format(self.endpoint, self.opts.host_id),
-            json={
-                'host': self.opts.host,
-                'port': self.opts.port,
-                'host_id': self.opts.host_id
-            },
-            status_code=requests.codes.OK
+            '{0}/host/{1}/deallocate'.format(
+                self.endpoint, self.opts.host_id),
+            json={},
+            status_code=httplib.NO_CONTENT
         )
 
         tasks.release(self.endpoint, ctx=self.ctx)
@@ -205,11 +234,12 @@ class ReleaseHostTestCase(unittest.TestCase):
 
     @requests_mock.Mocker()
     def test_failure(self, mock):
-        '''DELETE /hosts with failure response'''
+        '''DELETE /host/<host_id>/deallocate with failure response'''
         self.ctx.instance.runtime_properties['host_id'] = self.opts.host_id
         mock.register_uri(
             'DELETE',
-            '{0}/hosts/{1}'.format(self.endpoint, self.opts.host_id),
+            '{0}/host/{1}/deallocate'.format(
+                self.endpoint, self.opts.host_id),
             json=self.error_response,
             status_code=self.opts.error_code
         )

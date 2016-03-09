@@ -9,9 +9,24 @@ plugins:
     package_name: cloudify-host-pool-plugin
     package_version: '1.4.dev0'
 
+data_types:
+  cloudify.datatypes.hostpool.Filters:
+    properties:
+      tags:
+        description: |
+          List of tags which all must match in the hosts' tags list
+        required: false
+        default: []
+
 node_types:
   cloudify.hostpool.nodes.Host:
     derived_from: cloudify.nodes.Compute
+    properties:
+      filters:
+        description: |
+          A dictionary of values to pass as filters
+        type: cloudify.datatypes.hostpool.Filters
+        required: false
     interfaces:
       cloudify.interfaces.worker_installer:
         install:
@@ -65,8 +80,13 @@ node_types:
           inputs:
             service_url:
               description: >
-                The url to hostpool service
+                The URL endpoint of the host pool service (ex. http://127.0.0.1:8080)
               type: string
+            os:
+              description: |
+                Specifies the OS of the host to request from the host pool
+              type: string
+              default: ~
         delete:
           implementation: hostpool.cloudify_hostpool_plugin.tasks.release
           inputs:
@@ -75,6 +95,19 @@ node_types:
                 The url to hostpool service
               type: string
 
+  cloudify.hostpool.nodes.LinuxHost:
+    derived_from: cloudify.hostpool.nodes.Host
+    interfaces:
+      cloudify.interfaces.lifecycle:
+          create:
+            implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
+            inputs:
+              os:
+                description: |
+                  Specifies the OS of the host to request from the host pool
+                type: string
+                default: linux
+              
   cloudify.hostpool.nodes.WindowsHost:
     derived_from: cloudify.hostpool.nodes.Host
     interfaces:
@@ -124,3 +157,12 @@ node_types:
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
+          inputs:
+            os:
+              description: |
+                Specifies the OS of the host to request from the host pool
+              type: string
+              default: windows
