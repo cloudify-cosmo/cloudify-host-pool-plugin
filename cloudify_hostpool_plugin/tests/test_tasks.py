@@ -103,7 +103,8 @@ class AcquireHostTestCase(unittest.TestCase):
             },
             status_code=httplib.OK
         )
-        tasks.acquire(self.endpoint, requested_os='linux', ctx=self.ctx)
+        self.ctx.node.properties['os'] = 'linux'
+        tasks.acquire(self.endpoint, ctx=self.ctx)
         self.assertEqual(self.ctx.instance.runtime_properties['host_id'],
                          self.opts.host_id)
         self.assertEqual(self.ctx.instance.runtime_properties['user'],
@@ -134,7 +135,8 @@ class AcquireHostTestCase(unittest.TestCase):
             },
             status_code=httplib.OK
         )
-        tasks.acquire(self.endpoint, requested_os='linux', ctx=self.ctx)
+        self.ctx.node.properties['os'] = 'linux'
+        tasks.acquire(self.endpoint, ctx=self.ctx)
         self.assertEqual(self.ctx.instance.runtime_properties['host_id'],
                          self.opts.host_id)
         self.assertEqual(self.ctx.instance.runtime_properties['user'],
@@ -153,13 +155,13 @@ class AcquireHostTestCase(unittest.TestCase):
             '{0}/host/allocate'.format(self.endpoint),
             status_code=httplib.BAD_REQUEST
         )
+        self.ctx.node.properties['os'] = 12345
         self.assertRaisesRegexp(
             NonRecoverableError,
             'Requested OS must be a string',
             tasks.acquire,
             self.endpoint,
-            ctx=self.ctx,
-            requested_os=1234)
+            ctx=self.ctx)
 
     @requests_mock.Mocker()
     def test_failure(self, mock):
@@ -170,6 +172,7 @@ class AcquireHostTestCase(unittest.TestCase):
             json=self.error_response,
             status_code=self.opts.error_code
         )
+        self.ctx.node.properties['os'] = 'linux'
         self.assertRaisesRegexp(
             NonRecoverableError,
             'Error: {0}, Reason: {1}'.format(
@@ -177,7 +180,6 @@ class AcquireHostTestCase(unittest.TestCase):
                 self.error_response['error']),
             tasks.acquire,
             self.endpoint,
-            requested_os='linux',
             ctx=self.ctx)
 
 
