@@ -22,6 +22,11 @@ node_types:
   cloudify.hostpool.nodes.Host:
     derived_from: cloudify.nodes.Compute
     properties:
+      os:
+        description: |
+          Host OS to search for
+        type: string
+        required: true
       filters:
         description: |
           A dictionary of values to pass as filters
@@ -82,11 +87,6 @@ node_types:
               description: >
                 The URL endpoint of the host pool service (ex. http://127.0.0.1:8080)
               type: string
-            os:
-              description: |
-                Specifies the OS of the host to request from the host pool
-              type: string
-              default: ~
         delete:
           implementation: hostpool.cloudify_hostpool_plugin.tasks.release
           inputs:
@@ -97,19 +97,15 @@ node_types:
 
   cloudify.hostpool.nodes.LinuxHost:
     derived_from: cloudify.hostpool.nodes.Host
-    interfaces:
-      cloudify.interfaces.lifecycle:
-          create:
-            implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
-            inputs:
-              os:
-                description: |
-                  Specifies the OS of the host to request from the host pool
-                type: string
-                default: linux
+    properties:
+      os:
+        default: linux
               
   cloudify.hostpool.nodes.WindowsHost:
     derived_from: cloudify.hostpool.nodes.Host
+    properties:
+      os:
+        default: windows
     interfaces:
       cloudify.interfaces.worker_installer:
         install:
@@ -157,12 +153,3 @@ node_types:
                 user: { get_attribute: [SELF, user] }
                 password: { get_attribute: [SELF, password] }
                 port: { get_attribute: [SELF, port] }
-      cloudify.interfaces.lifecycle:
-        create:
-          implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
-          inputs:
-            os:
-              description: |
-                Specifies the OS of the host to request from the host pool
-              type: string
-              default: windows
