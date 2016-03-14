@@ -37,9 +37,10 @@ RUNTIME_PROPERTIES_KEYS = [
 
 
 @operation
-def acquire(service_url, requested_os='linux', **_):
+def acquire(service_url, **_):
     '''Allocate a host for the user from the pool'''
     # Format the OS request
+    requested_os = ctx.node.properties.get('os')
     if not isinstance(requested_os, basestring):
         raise NonRecoverableError('Requested OS must be a string')
     # Normalize filters
@@ -132,6 +133,7 @@ def _handle_error(response):
 def _set_runtime_properties(host, key_path):
     '''Sets runtime properties for the acquired host'''
     ctx.instance.runtime_properties['host_id'] = host['id']
+    ctx.instance.runtime_properties['os'] = host['os']
     ctx.instance.runtime_properties['ip'] = \
         host.get('endpoint', dict()).get('ip')
     ctx.instance.runtime_properties['port'] = \
