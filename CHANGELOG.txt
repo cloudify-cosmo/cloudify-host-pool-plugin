@@ -1,0 +1,4 @@
+1.4:
+ - Updated to work with new host pool service
+ - Added Windows Host Support
+ - Adding tagging support
