@@ -13,132 +13,168 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-import shutil
-import os
+import requests
+import uuid
 
 from cosmo_tester.test_suites.test_blueprints import nodecellar_test
-from cosmo_tester.framework import util
+from cosmo_tester.framework.git_helper import clone
+from cosmo_tester.framework.test_cases import MonitoringTestCase
+from cosmo_tester.framework.cfy_helper import DEFAULT_EXECUTE_TIMEOUT
 
 from system_tests import resources
 
+UBUNTU_HOST = 'ubuntu_host_template'
+CENTOS_HOST = 'centos_host_template'
+WINDOWS_HOST = 'windows_host_template'
+HOST_TEMPLATES = [WINDOWS_HOST, CENTOS_HOST, UBUNTU_HOST]
+EXTENDED_TIMEOUT = 3600 # default is 1800. These windows VMs take forever.
 
 class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
 
     def test_nodecellar_hostpool(self):
-        self._provision_pool()
-        self._install_host_pool_service()
+        self._install_service_with_seed_vms()
+        self.addCleanup(self._uninstall_host_pool_service)
+        hosts = self._get_hosts(self.host_pool_service_deployment_id)
+        self.assertEquals(len(hosts), len(HOST_TEMPLATES))
+        for host in hosts:
+            self._assert_host_state(host)
+        self._scale(UBUNTU_HOST)
+        hosts = self._get_hosts(self.host_pool_service_deployment_id)
+        self.assertEquals(len(hosts), len(HOST_TEMPLATES) + 1)
         self._test_nodecellar_impl('host-pool-blueprint.yaml')
-        self._teardown_pool()
-        self._uninstall_host_pool_service()
+        hosts = self._get_hosts(self.host_pool_service_deployment_id)
+        self.assertEquals(len(hosts), len(HOST_TEMPLATES) + 1)
+        for host in hosts:
+            self._assert_host_state(host)
 
-    def assert_monitoring_data_exists(self):
-        # this blueprint does not define monitoring
-        pass
 
-    def _provision_pool(self):
+    def _test_nodecellar_impl(
+        self, blueprint_file, execute_timeout=DEFAULT_EXECUTE_TIMEOUT
+        ):
 
-        self.password_pool_host = util.generate_password()
+        self.repo_dir = clone(self.repo_url, self.workdir,
+                              'CFY-5078-Update-HP-System-Tests')
+        self.blueprint_yaml = self.repo_dir / blueprint_file
 
-        def _render_password_authentication_script():
+        self.modify_blueprint()
 
-            script_template = resources.get_resource(
-                'enable_password_authentication.sh.template')
-            return util.render_template(
-                template_path=script_template,
-                password=self.password_pool_host)
+        before, after = self.upload_deploy_and_execute_install(
+            inputs=self.get_inputs(),
+            execute_timeout=execute_timeout
+        )
+
+        self.post_install_assertions(before, after)
+
+        self.on_nodecellar_installed()
+
+        self.execute_uninstall()
+
+        self.post_uninstall_assertions()
+
+    def post_install_assertions(self, before_state, after_state):
+
+        delta = self.get_manager_state_delta(before_state, after_state)
+
+        self.logger.info('Current manager state: {0}'.format(delta))
+
+        self.assertEqual(len(delta['blueprints']), 1,
+                         'blueprint: {0}'.format(delta))
+
+        self.assertEqual(len(delta['deployments']), 1,
+                         'deployment: {0}'.format(delta))
+
+        deployment_from_list = delta['deployments'].values()[0]
+
+        deployment_by_id = self.client.deployments.get(deployment_from_list.id)
+        self.deployment_id = deployment_from_list.id
+
+        executions = self.client.executions.list(
+            deployment_id=deployment_by_id.id)
+
+        self.assertEqual(len(executions), 2,
+                         'There should be 2 executions but are: {0}'.format(
+                             executions))
+
+        execution_from_list = executions[0]
+        execution_by_id = self.client.executions.get(execution_from_list.id)
+
+        self.assertEqual(execution_from_list.id, execution_by_id.id)
+        self.assertEqual(execution_from_list.workflow_id,
+                         execution_by_id.workflow_id)
+        self.assertEqual(execution_from_list['blueprint_id'],
+                         execution_by_id['blueprint_id'])
+
+        self.assertEqual(len(delta['deployment_nodes']), 1,
+                         'deployment_nodes: {0}'.format(delta))
+
+        self.assertEqual(len(delta['node_state']), 1,
+                         'node_state: {0}'.format(delta))
+
+        self.assertEqual(len(delta['nodes']), self.expected_nodes_count,
+                         'nodes: {0}'.format(delta))
+
+        nodes_state = delta['node_state'].values()[0]
+        self.assertEqual(len(nodes_state), self.expected_nodes_count,
+                         'nodes_state: {0}'.format(nodes_state))
+        events, total_events = self.client.events.get(execution_by_id.id)
+
+        self.assertGreater(len(events), 0,
+                           'Expected at least 1 event for execution id: {0}'
+                           .format(execution_by_id.id))
+
+        hosts = self._get_hosts(self.host_pool_service_deployment_id)
+        for host in hosts:
+            if UBUNTU_HOST in host.get('name'):
+                self._assert_host_state(host, True)
+            else:
+                self._assert_host_state(host)
+
+    def post_uninstall_assertions(self, client=None):
+        client = client or self.client
+
+        nodes_instances = client.node_instances.list(self.deployment_id)
+        self.assertFalse(any(node_ins for node_ins in nodes_instances if
+                             node_ins.state != 'deleted'))
+
+    def _install_service_with_seed_vms(self):
 
         blueprint_path = resources.get_resource(
-            'pool-blueprint/pool-blueprint.yaml')
+            'openstack-test/service-blueprint.yaml')
+
         self.blueprint_yaml = blueprint_path
 
-        blueprint_id = '{0}-pool-blueprint'.format(self.test_id)
-        deployment_id = '{0}-pool-deployment'.format(self.test_id)
-
-        script = _render_password_authentication_script()
+        blueprint_id = '{0}-hps-blueprint'.format(self.test_id)
+        deployment_id = '{0}-hps-deployment'.format(self.test_id)
 
         self.upload_deploy_and_execute_install(
             blueprint_id=blueprint_id,
             deployment_id=deployment_id,
             inputs={
-                'image': self.env.ubuntu_trusty_image_id,
-                'flavor': self.env.small_flavor_id,
-                'enable_password_authentication_script': script
-            }
-        )
-        self.pool_deployment_id = deployment_id
-
-    def _teardown_pool(self):
-        self.execute_uninstall(self.pool_deployment_id)
-
-    def _install_host_pool_service(self):
-
-        def _render_pool(_runtime_blueprint_directory):
-
-            hosts = self.client.deployments.outputs.get(
-                deployment_id=self.pool_deployment_id).outputs['hosts']
-
-            pool_template = resources.get_resource(
-                'host-pool-service-blueprint/pool.yaml.template')
-            util.render_template_to_file(
-                template_path=pool_template,
-                file_path=os.path.join(
-                    _runtime_blueprint_directory,
-                    'pool.yaml'),
-                ip_pool_host_1=hosts['host_1']['ip'],
-                ip_pool_host_2=hosts['host_2']['ip'],
-                public_address_pool_host_1=hosts['host_1']['public_address'],
-                public_address_pool_host_2=hosts['host_2']['public_address'],
-                password_pool_host=self.password_pool_host
-            )
-
-        def _render_agent_key(_runtime_blueprint_directory):
-
-            with open(util.get_actual_keypath(
-                    self.env,
-                    self.env.agent_key_path)) as f:
-                key_content = f.read()
-
-            key_template = resources.get_resource(
-                'host-pool-service-blueprint/keys/agent_key.pem.template')
-            util.render_template_to_file(
-                template_path=key_template,
-                file_path=os.path.join(
-                    _runtime_blueprint_directory,
-                    'keys',
-                    'agent_key.pem'),
-                agent_private_key_file_content=key_content
-            )
-
-        # copy directory outside of source control since
-        # we will be adding files to it.
-        blueprint_directory = resources.get_resource(
-            'host-pool-service-blueprint')
-        runtime_blueprint_directory = os.path.join(
-            self.workdir, 'host-pool-service-blueprint')
-        shutil.copytree(src=blueprint_directory,
-                        dst=runtime_blueprint_directory)
-
-        _render_pool(runtime_blueprint_directory)
-        _render_agent_key(runtime_blueprint_directory)
-
-        self.blueprint_yaml = os.path.join(
-            runtime_blueprint_directory,
-            'openstack-host-pool-service-blueprint.yaml'
-        )
-
-        blueprint_id = '{0}-host-pool-service-blueprint'.format(self.test_id)
-        deployment_id = '{0}-host-pool-service-deployment'.format(
-            self.test_id)
-        self.upload_deploy_and_execute_install(
-            blueprint_id=blueprint_id,
-            deployment_id=deployment_id,
-            inputs={
-                'image': self.env.ubuntu_trusty_image_id,
-                'flavor': self.env.small_flavor_id
-            }
+                'centos_image_id': self.env.centos_7_image_id,
+                'windows_image_id': self.env.windows_image_id,
+                'ubuntu_image_id': self.env.ubuntu_trusty_image_id,
+                'flavor_id': self.env.medium_flavor_id,
+                'key_path': '/tmp/{0}.pem'.format(str(uuid.uuid4()))
+            },
+            execute_timeout=EXTENDED_TIMEOUT
         )
 
         self.host_pool_service_deployment_id = deployment_id
+
+    def _get_hosts(self, deployment_id):
+        outputs = self.get_outputs(self.host_pool_service_deployment_id)
+        endpoint_url = self.get_endpoint_url(outputs)
+        response = requests.get('{0}/hosts'.format(endpoint_url))
+        self.logger.info('Current hosts: {0}'.format(response.json()))
+        return response.json()
+
+    def _assert_host_state(self, host, state=False):
+        self.assertEquals(host.get('allocated'), state)
+
+    def _scale(self, node_id, delta=+1):
+        self.cfy.execute_workflow('scale', self.host_pool_service_deployment_id,
+                                  parameters=dict(node_id=node_id,
+                                                  delta=delta))
 
     def _uninstall_host_pool_service(self):
         self.execute_uninstall(self.host_pool_service_deployment_id)
@@ -147,19 +183,26 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
     def expected_nodes_count(self):
         return 5
 
-    @property
-    def host_expected_runtime_properties(self):
-        return ['ip', 'user', 'port', 'host_id', 'public_address',
-                'password', 'key']
-
     def get_inputs(self):
 
         # the host pool endpoint can be retrieved by getting the deployment
         # outputs of the host-pool-service deployment
 
-        outputs = self.client.deployments.outputs.get(
-            deployment_id=self.host_pool_service_deployment_id).outputs
-        endpoint = 'http://{0}:{1}'.format(
-            outputs['endpoint']['ip_address'],
-            outputs['endpoint']['port'])
-        return {'host_pool_service_endpoint': endpoint}
+        outputs = self.get_outputs(self.host_pool_service_deployment_id)
+        endpoint_url = self.get_endpoint_url(outputs)
+        inputs = {
+            'host_pool_service_endpoint': endpoint_url
+        }
+        return inputs
+
+    def get_outputs(self, deployment_id):
+        return self.client.deployments.outputs.get(
+            deployment_id=deployment_id).outputs
+
+    def get_endpoint_ip(self, outputs):
+        return outputs['endpoint']['ip_address']
+
+    def get_endpoint_url(self, outputs):
+        endpoint_url = 'http://{0}:{1}'.format(self.get_endpoint_ip(outputs),
+                                               outputs['endpoint']['port'])
+        return endpoint_url
