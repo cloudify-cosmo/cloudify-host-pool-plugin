@@ -1,0 +1,151 @@
+tosca_definitions_version: cloudify_dsl_1_2
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/3.3.1/types.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/1.3.1/plugin.yaml
+  - http://www.getcloudify.org/spec/fabric-plugin/1.3/plugin.yaml
+  - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-host-pool-service/master/host-pool-service.yaml
+
+inputs:
+
+  windows_image_id:
+    description: Openstack Windows Server 2012 R2 Standard image ID.
+
+  centos_image_id:
+    description: Openstack Centos 7 image ID.
+
+  ubuntu_image_id:
+    description: Openstack Ubuntu 14.04 image ID.
+
+  flavor_id:
+    description: Openstack flavor ID.
+
+  key_path:
+    description: Openstack Windows Server 2012 R2 Standard image ID.
+
+relationships:
+  managed_by_host_pool_service:
+    derived_from: cloudify.relationships.connected_to
+    target_interfaces:
+      cloudify.interfaces.relationship_lifecycle:
+        establish:
+          implementation: scripts/add_host.py
+
+node_templates:
+
+  host_pool_service:
+    type: cloudify.nodes.HostPoolService
+    properties:
+      pool: pools/pool.yaml
+      working_directory: /tmp
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: service_host
+        target_interfaces:
+          cloudify.interfaces.relationship_lifecycle:
+            establish:
+              implementation: fabric.fabric_plugin.tasks.run_task
+              executor: central_deployment_agent
+              inputs:
+                tasks_file: scripts/tasks.py
+                task_name: copy_key
+                task_properties:
+                  key_path: { get_input: key_path }
+                  save_file_to: { get_input: key_path }
+                fabric_env:
+                  host_string: { get_attribute: [ TARGET, ip ] }
+                  user: { get_attribute: [ TARGET, agent_config, user ] }
+                  key_filename: /root/.ssh/agent_key.pem
+
+  service_ip:
+    type: cloudify.openstack.nodes.FloatingIP
+
+  service_host:
+    type: cloudify.openstack.nodes.Server
+    properties:
+      agent_config:
+        install_method: remote
+        user: centos
+      server:
+        image: { get_input: centos_image_id }
+        flavor: { get_input: flavor_id }
+    relationships:
+      - target: service_ip
+        type: cloudify.openstack.server_connected_to_floating_ip
+      - target: service_security_group
+        type: cloudify.openstack.server_connected_to_security_group
+
+  service_security_group:
+    type: cloudify.openstack.nodes.SecurityGroup
+    properties:
+      security_group:
+        name: host_pool_service_security_group
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          port: { get_property: [ host_pool_service, port ] }
+
+  host_pool_key:
+    type: cloudify.openstack.nodes.KeyPair
+    properties:
+      private_key_path: { get_input: key_path }
+
+  windows_host_template:
+    type: cloudify.openstack.nodes.WindowsServer
+    properties:
+      agent_config:
+        install_method: none
+        user: Administrator
+      server:
+        image: { get_input: windows_image_id }
+        flavor: { get_input: flavor_id }
+        userdata: |
+          #ps1_sysnative
+          winrm quickconfig -q
+          winrm set winrm/config              '@{MaxTimeoutms="1800000"}'
+          winrm set winrm/config/winrs        '@{MaxMemoryPerShellMB="300"}'
+          winrm set winrm/config/service      '@{AllowUnencrypted="true"}'
+          winrm set winrm/config/service/auth '@{Basic="true"}'
+          &netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
+          &netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
+    relationships:
+      - target: host_pool_service
+        type: managed_by_host_pool_service
+
+  centos_host_template:
+    type: cloudify.openstack.nodes.Server
+    properties:
+      agent_config:
+        install_method: none
+        user: centos
+        key: { get_property: [ host_pool_key, private_key_path ] }
+      server:
+        image: { get_input: centos_image_id }
+        flavor: { get_input: flavor_id }
+    relationships:
+      - target: host_pool_key
+        type: cloudify.openstack.server_connected_to_keypair
+      - target: host_pool_service
+        type: managed_by_host_pool_service
+
+  ubuntu_host_template:
+    type: cloudify.openstack.nodes.Server
+    properties:
+      agent_config:
+        install_method: none
+        user: ubuntu
+        key: { get_property: [ host_pool_key, private_key_path ] }
+      server:
+        image: { get_input: ubuntu_image_id }
+        flavor: { get_input: flavor_id }
+    relationships:
+      - target: host_pool_key
+        type: cloudify.openstack.server_connected_to_keypair
+      - target: host_pool_service
+        type: managed_by_host_pool_service
+
+outputs:
+  endpoint:
+    description: Host Pool Service Endpoint
+    value:
+      ip_address: { get_attribute: [ service_ip, floating_ip_address ] }
+      port: { get_property: [ host_pool_service, port ] }
