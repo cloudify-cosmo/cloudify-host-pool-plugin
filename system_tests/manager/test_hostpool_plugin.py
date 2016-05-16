@@ -64,8 +64,6 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
 
         self.post_install_assertions(before, after)
 
-        self.on_nodecellar_installed()
-
         self.execute_uninstall()
 
         self.post_uninstall_assertions()
