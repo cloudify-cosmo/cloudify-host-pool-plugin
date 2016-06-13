@@ -170,7 +170,7 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
 
     def _scale(self, node_id, delta=+1):
         self.cfy.execute_workflow('scale', self.host_pool_service_deployment_id,
-                                  parameters=dict(node_id=node_id,
+                                  parameters=dict(scalable_entity_name=node_id,
                                                   delta=delta))
 
     def _uninstall_host_pool_service(self):
