@@ -19,7 +19,7 @@ import uuid
 from cosmo_tester.test_suites.test_blueprints import nodecellar_test
 from cosmo_tester.framework.git_helper import clone
 from cosmo_tester.framework.test_cases import MonitoringTestCase
-from cosmo_tester.framework.cfy_helper import DEFAULT_EXECUTE_TIMEOUT
+from cosmo_tester.framework.testenv import DEFAULT_EXECUTE_TIMEOUT
 
 from system_tests import resources
 
@@ -153,7 +153,7 @@ class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
                 'flavor_id': self.env.medium_flavor_id,
                 'key_path': '/tmp/{0}.pem'.format(str(uuid.uuid4()))
             },
-            execute_timeout=EXTENDED_TIMEOUT
+            timeout=EXTENDED_TIMEOUT
         )
 
         self.host_pool_service_deployment_id = deployment_id
