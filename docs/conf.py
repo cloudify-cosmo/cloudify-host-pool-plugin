@@ -48,7 +48,8 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.coverage',
     'sphinx.ext.ifconfig',
-    'sphinx.ext.viewcode'
+    'sphinx.ext.viewcode',
+    'sphinxify',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -285,3 +286,8 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 autodoc_member_order = 'bysource'
+
+cfy_blueprint_paths = [
+    '../plugin.yaml',
+    'https://raw.githubusercontent.com/cloudify-cosmo/cloudify-host-pool-service/master/host-pool-service.yaml',
+]

@@ -3,13 +3,24 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to cloudify-host-pool-service documentation!
-====================================================
+Cloudify host-pool
+==================
 
-Contents:
+This plugin is an infrastrcture provisioning plugin
+that is used in conjunction with Cloudify's
+`Host-Pool Service <https://github.com/cloudify-cosmo/cloudify-host-pool-service>`_
+to use hosts from a pool of existing hosts.
+
+Contents
+--------
 
 .. toctree::
-   :maxdepth: 1
+    :maxdepth: 1
+
+    requirements
+    types
+    examples
+    changelog
 
 .. automodule:: cloudify_hostpool_plugin
    :members:
@@ -17,7 +28,7 @@ Contents:
    :show-inheritance:
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

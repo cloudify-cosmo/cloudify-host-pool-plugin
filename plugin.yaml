@@ -24,7 +24,8 @@ node_types:
     properties:
       os:
         description: |
-          Host OS to search for
+          Host OS to search for.
+          Such as Linux, BSD, Windows, etc.
         type: string
         required: true
       filters:
@@ -100,12 +101,14 @@ node_types:
     properties:
       os:
         default: linux
-              
+        description: linux
+
   cloudify.hostpool.nodes.WindowsHost:
     derived_from: cloudify.hostpool.nodes.Host
     properties:
       os:
         default: windows
+        description: windows
     interfaces:
       cloudify.interfaces.worker_installer:
         install:

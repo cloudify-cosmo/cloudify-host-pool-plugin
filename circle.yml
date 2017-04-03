@@ -9,15 +9,16 @@ checkout:
 
 dependencies:
   pre:
-    - pyenv local 2.7.9 
+    - pyenv local 2.7.9
   override:
     - pip install tox
 
 test:
   override:
     - tox -e flake8
-    - tox -e py27
     - tox -e docs
+    - tox -e py27
+    - mv .tox/docs/tmp/html $CIRCLE_ARTIFACTS
 
 deployment:
   release:
