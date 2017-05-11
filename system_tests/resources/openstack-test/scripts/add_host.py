@@ -98,7 +98,7 @@ def add_host(hostname, ip, user, port):
             credentials=credentials_data, os='windows'
         )
     else:
-        key_file_path = ctx.source.node.properties['agent_config']['key']
+        key_file_path = ctx.target.instance.runtime_properties['key_path']
 
         with open(key_file_path, 'r') as key_file_data:
             key_data = key_file_data.read()

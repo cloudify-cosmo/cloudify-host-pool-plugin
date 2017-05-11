@@ -5,7 +5,7 @@
 plugins:
   hostpool:
     executor: central_deployment_agent
-    source: https://github.com/cloudify-cosmo/cloudify-host-pool-plugin/archive/1.4.zip
+    source: https://github.com/cloudify-cosmo/cloudify-host-pool-plugin/archive/update-imports.zip
     package_name: cloudify-host-pool-plugin
     package_version: '1.4'
 

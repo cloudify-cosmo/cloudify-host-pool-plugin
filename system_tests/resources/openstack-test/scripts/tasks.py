@@ -8,3 +8,4 @@ def copy_key(key_path, save_file_to):
         'copied key from manager {0} to target {1}'
         .format(key_path, save_file_to)
     )
+    ctx.source.instance.runtime_properties['key_path'] = save_file_to
