@@ -43,18 +43,22 @@ node_templates:
         target_interfaces:
           cloudify.interfaces.relationship_lifecycle:
             establish:
+              # this task runs on the manager, and ssh's to the hostpool service.
+              # It will copy the ssh key from private_key_path on the manager,
+              # to key_path on the hostpool service. The service will later use
+              # this key to ssh to the hosts.
               implementation: fabric.fabric_plugin.tasks.run_task
               executor: central_deployment_agent
               inputs:
                 tasks_file: scripts/tasks.py
                 task_name: copy_key
                 task_properties:
-                  key_path: { get_input: key_path }
+                  key_path: { get_property: [ host_pool_key, private_key_path ] }
                   save_file_to: { get_input: key_path }
                 fabric_env:
                   host_string: { get_attribute: [ TARGET, ip ] }
                   user: { get_attribute: [ TARGET, agent_config, user ] }
-                  key_filename: /root/.ssh/agent_key.pem
+                  key_filename: { get_property: [ host_pool_key, private_key_path ] }
 
   service_ip:
     type: cloudify.openstack.nodes.FloatingIP
