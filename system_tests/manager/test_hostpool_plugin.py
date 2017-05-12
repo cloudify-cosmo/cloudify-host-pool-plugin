@@ -1,5 +1,5 @@
 ########
-# Copyright (c) 2015 GigaSpaces Technologies Ltd. All rights reserved
+# Copyright (c) 2017 GigaSpaces Technologies Ltd. All rights reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,193 +13,168 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-import requests
 import uuid
+import pytest
+import requests
 
-from cosmo_tester.test_suites.test_blueprints import nodecellar_test
-from cosmo_tester.framework.git_helper import clone
-from cosmo_tester.framework.test_cases import MonitoringTestCase
-from cosmo_tester.framework.cfy_helper import DEFAULT_EXECUTE_TIMEOUT
+from cosmo_tester.framework.examples import AbstractExample
+from cosmo_tester.framework.fixtures import image_based_manager
+from cosmo_tester.framework.examples.nodecellar import NodeCellarExample
 
-from system_tests import resources
+
+manager = image_based_manager
+
 
 UBUNTU_HOST = 'ubuntu_host_template'
 CENTOS_HOST = 'centos_host_template'
 WINDOWS_HOST = 'windows_host_template'
 HOST_TEMPLATES = [WINDOWS_HOST, CENTOS_HOST, UBUNTU_HOST]
-EXTENDED_TIMEOUT = 3600 # default is 1800. These windows VMs take forever.
-
-class HostPoolPluginTest(nodecellar_test.NodecellarAppTest):
-
-    def test_nodecellar_hostpool(self):
-        self._install_service_with_seed_vms()
-        self.addCleanup(self._uninstall_host_pool_service)
-        hosts = self._get_hosts(self.host_pool_service_deployment_id)
-        self.assertEquals(len(hosts), len(HOST_TEMPLATES))
-        for host in hosts:
-            self._assert_host_state(host)
-        self._scale(UBUNTU_HOST)
-        hosts = self._get_hosts(self.host_pool_service_deployment_id)
-        self.assertEquals(len(hosts), len(HOST_TEMPLATES) + 1)
-        self._test_nodecellar_impl('host-pool-blueprint.yaml')
-        hosts = self._get_hosts(self.host_pool_service_deployment_id)
-        self.assertEquals(len(hosts), len(HOST_TEMPLATES) + 1)
-        for host in hosts:
-            self._assert_host_state(host)
 
 
-    def _test_nodecellar_impl(
-        self, blueprint_file, execute_timeout=DEFAULT_EXECUTE_TIMEOUT
-        ):
-
-        self.repo_dir = clone(self.repo_url, self.workdir)
-        self.blueprint_yaml = self.repo_dir / blueprint_file
-
-        self.modify_blueprint()
-
-        before, after = self.upload_deploy_and_execute_install(
-            inputs=self.get_inputs(),
-            execute_timeout=execute_timeout
-        )
-
-        self.post_install_assertions(before, after)
-
-        self.execute_uninstall()
-
-        self.post_uninstall_assertions()
-
-    def post_install_assertions(self, before_state, after_state):
-
-        delta = self.get_manager_state_delta(before_state, after_state)
-
-        self.logger.info('Current manager state: {0}'.format(delta))
-
-        self.assertEqual(len(delta['blueprints']), 1,
-                         'blueprint: {0}'.format(delta))
-
-        self.assertEqual(len(delta['deployments']), 1,
-                         'deployment: {0}'.format(delta))
-
-        deployment_from_list = delta['deployments'].values()[0]
-
-        deployment_by_id = self.client.deployments.get(deployment_from_list.id)
-        self.deployment_id = deployment_from_list.id
-
-        executions = self.client.executions.list(
-            deployment_id=deployment_by_id.id)
-
-        self.assertEqual(len(executions), 2,
-                         'There should be 2 executions but are: {0}'.format(
-                             executions))
-
-        execution_from_list = executions[0]
-        execution_by_id = self.client.executions.get(execution_from_list.id)
-
-        self.assertEqual(execution_from_list.id, execution_by_id.id)
-        self.assertEqual(execution_from_list.workflow_id,
-                         execution_by_id.workflow_id)
-        self.assertEqual(execution_from_list['blueprint_id'],
-                         execution_by_id['blueprint_id'])
-
-        self.assertEqual(len(delta['deployment_nodes']), 1,
-                         'deployment_nodes: {0}'.format(delta))
-
-        self.assertEqual(len(delta['node_state']), 1,
-                         'node_state: {0}'.format(delta))
-
-        self.assertEqual(len(delta['nodes']), self.expected_nodes_count,
-                         'nodes: {0}'.format(delta))
-
-        nodes_state = delta['node_state'].values()[0]
-        self.assertEqual(len(nodes_state), self.expected_nodes_count,
-                         'nodes_state: {0}'.format(nodes_state))
-        events, total_events = self.client.events.get(execution_by_id.id)
-
-        self.assertGreater(len(events), 0,
-                           'Expected at least 1 event for execution id: {0}'
-                           .format(execution_by_id.id))
-
-        hosts = self._get_hosts(self.host_pool_service_deployment_id)
-        for host in hosts:
-            if UBUNTU_HOST in host.get('name'):
-                self._assert_host_state(host, True)
-            else:
-                self._assert_host_state(host)
-
-    def post_uninstall_assertions(self, client=None):
-        client = client or self.client
-
-        nodes_instances = client.node_instances.list(self.deployment_id)
-        self.assertFalse(any(node_ins for node_ins in nodes_instances if
-                             node_ins.state != 'deleted'))
-
-    def _install_service_with_seed_vms(self):
-
-        blueprint_path = resources.get_resource(
-            'openstack-test/service-blueprint.yaml')
-
-        self.blueprint_yaml = blueprint_path
-
-        blueprint_id = '{0}-hps-blueprint'.format(self.test_id)
-        deployment_id = '{0}-hps-deployment'.format(self.test_id)
-
-        self.upload_deploy_and_execute_install(
-            blueprint_id=blueprint_id,
-            deployment_id=deployment_id,
-            inputs={
-                'centos_image_id': self.env.centos_7_image_id,
-                'windows_image_id': self.env.windows_image_id,
-                'ubuntu_image_id': self.env.ubuntu_trusty_image_id,
-                'flavor_id': self.env.medium_flavor_id,
-                'key_path': '/tmp/{0}.pem'.format(str(uuid.uuid4()))
-            },
-            execute_timeout=EXTENDED_TIMEOUT
-        )
-
-        self.host_pool_service_deployment_id = deployment_id
-
-    def _get_hosts(self, deployment_id):
-        outputs = self.get_outputs(self.host_pool_service_deployment_id)
-        endpoint_url = self.get_endpoint_url(outputs)
-        response = requests.get('{0}/hosts'.format(endpoint_url))
-        self.logger.info('Current hosts: {0}'.format(response.json()))
-        return response.json()
-
-    def _assert_host_state(self, host, state=False):
-        self.assertEquals(host.get('allocated'), state)
-
-    def _scale(self, node_id, delta=+1):
-        self.cfy.execute_workflow('scale', self.host_pool_service_deployment_id,
-                                  parameters=dict(scalable_entity_name=node_id,
-                                                  delta=delta))
-
-    def _uninstall_host_pool_service(self):
-        self.execute_uninstall(self.host_pool_service_deployment_id)
+class HostPoolExample(AbstractExample):
+    REPOSITORY_URL = 'https://github.com/cloudify-cosmo/cloudify-host-pool-plugin.git'  # noqa
+    _inputs = None
 
     @property
-    def expected_nodes_count(self):
-        return 5
+    def inputs(self):
+        if self._inputs is None:
+            attributes = self.attributes
+            self._inputs = {
+                'centos_image_id': attributes.centos7_image_name,
+                'windows_image_id': attributes.windows_server_2012_image_name,
+                'ubuntu_image_id': attributes.ubuntu_14_04_image_name,
+                'flavor_id': attributes.medium_flavor_name,
+                'floating_network_id': attributes.floating_network_id,
+                'network_name': attributes.network_name,
+                'key_pair_name': attributes.keypair_name,
+                'private_key_path': self.manager.remote_private_key_path,
+                # key_path is where the hostpool service host will store the
+                # key to the hosts; it is not the same as the agent key
+                'key_path': '/tmp/' + str(uuid.uuid4()),
+            }
+        return self._inputs
 
-    def get_inputs(self):
+    def verify_installation(self):
+        """Check that 3 hosts are added to the pool, but not used. Then,
+        scale up, and check that another host has been added.
+        """
+        super(HostPoolExample, self).verify_installation()
+        hosts = self.get_hosts()
+        self.assertEqual(len(HOST_TEMPLATES), len(hosts))
+        for host in hosts:
+            self.assert_host_state(host, allocated=False)
+        self._scale(UBUNTU_HOST)
+        hosts = self.get_hosts()
+        self.assertEqual(len(HOST_TEMPLATES) + 1, len(hosts))
 
-        # the host pool endpoint can be retrieved by getting the deployment
-        # outputs of the host-pool-service deployment
+    def get_hosts(self):
+        """Hosts added to the pool"""
+        endpoint_url = self.get_endpoint_url()
+        response = requests.get('{0}/hosts'.format(endpoint_url))
+        return response.json()
 
-        outputs = self.get_outputs(self.host_pool_service_deployment_id)
-        endpoint_url = self.get_endpoint_url(outputs)
-        inputs = {
-            'host_pool_service_endpoint': endpoint_url
-        }
-        return inputs
+    def get_endpoint_url(self):
+        """Address of the hostpool service API"""
+        return 'http://{0}:{1}'.format(
+            self.outputs['endpoint']['ip_address'],
+            self.outputs['endpoint']['port']
+        )
 
-    def get_outputs(self, deployment_id):
-        return self.client.deployments.outputs.get(
-            deployment_id=deployment_id).outputs
+    def assert_host_state(self, host, allocated=False):
+        self.assertEqual(host.get('allocated'), allocated)
 
-    def get_endpoint_ip(self, outputs):
-        return outputs['endpoint']['ip_address']
+    def _scale(self, node_id, delta=+1):
+        parameters = ('delta={0};scalable_entity_name={1}'
+                      .format(delta, node_id))
+        self.cfy.executions.start('scale', deployment_id=self.deployment_id,
+                                  parameters=parameters)
 
-    def get_endpoint_url(self, outputs):
-        endpoint_url = 'http://{0}:{1}'.format(self.get_endpoint_ip(outputs),
-                                               outputs['endpoint']['port'])
-        return endpoint_url
+
+class HostpoolNodeCellarExample(NodeCellarExample):
+    def __init__(self, hostpool, *args, **kwargs):
+        super(HostpoolNodeCellarExample, self).__init__(*args, **kwargs)
+        self._hostpool = hostpool
+
+    @property
+    def inputs(self):
+        if self._inputs is None:
+            self._inputs = {
+                'host_pool_service_endpoint': self._hostpool.get_endpoint_url()
+            }
+        return self._inputs
+
+    def verify_installation(self):
+        super(HostpoolNodeCellarExample, self).verify_installation()
+        # after installation, the ubuntu hosts were used for the nodecellar
+        # app, but other hosts are still free
+        for host in self._hostpool.get_hosts():
+            if UBUNTU_HOST in host.get('name'):
+                self._hostpool.assert_host_state(host, allocated=True)
+            else:
+                self._hostpool.assert_host_state(host, allocated=False)
+
+    def verify_all(self):
+        super(HostpoolNodeCellarExample, self).verify_all()
+        # after uninstalling - which is done at the end of parent class'
+        # verify_all - all the hosts are free again
+        for host in self._hostpool.get_hosts():
+            self._hostpool.assert_host_state(host, allocated=False)
+
+    def assert_nodecellar_working(self, endpoint):
+        # unfortunately, we can't access the nodecellar app directly,
+        # because
+        # 1) the nodecellar hostpool blueprint isn't an _openstack_
+        #    blueprint, so doesn't export the ip correctly in outputs;
+        # 2) the nodecellar nodejs host doesn't even have a floating ip
+        #    assigned
+        # 3) the hostpool service blueprint doesn't know about nodecellar,
+        #    so the security group doesn't allow connections on the nodecellar
+        #    port
+        # Instead, we will figure out the host ip from runtime properties
+        # (to overcome 1), ssh to the manager (to help 2), and from the
+        # manager, ssh to the nodejs host, where we will simply curl
+        # localhost (3)
+
+        port = endpoint['port']
+        nodejs_node = self.manager.client.node_instances.list(
+            node_name='nodejs_host')[0]
+        cloudify_agent = nodejs_node.runtime_properties['cloudify_agent']
+        ssh_command = ('ssh -o StrictHostKeyChecking=no {user}@{ip} -i {key} '
+                       '"curl -I localhost:{port}"'
+                       .format(user=cloudify_agent['user'],
+                               ip=nodejs_node.runtime_properties['ip'],
+                               key=cloudify_agent['key'],
+                               port=port))
+        with self.manager.ssh() as fabric:
+            response = fabric.sudo(ssh_command)
+        self.assertIn('200 OK', response)
+
+
+@pytest.fixture(scope='function')
+def hostpool(cfy, manager, attributes, ssh_key, logger, tmpdir):
+    hp = HostPoolExample(cfy, manager, attributes, ssh_key, logger, tmpdir)
+    hp.blueprint_file = 'system_tests/resources/openstack-test/service-blueprint.yaml'  # noqa
+
+    # verification is unrolled here because we want to validate and yield
+    # the service for further testing before uninstalling it
+    hp.upload_blueprint()
+    hp.create_deployment()
+    hp.install()
+    hp.verify_installation()
+    yield hp
+    hp.uninstall()
+    hp.delete_deployment()
+    hp.cleanup()
+
+
+@pytest.fixture(scope='function')
+def nodecellar_hostpool(hostpool, cfy, manager, attributes, ssh_key, tmpdir,
+                        logger):
+    nc = HostpoolNodeCellarExample(
+        hostpool, cfy, manager, attributes, ssh_key, logger, tmpdir)
+    nc.blueprint_file = 'host-pool-blueprint.yaml'
+    return nc
+
+
+def test_nodecellar_hostpool(nodecellar_hostpool):
+    nodecellar_hostpool.verify_all()
