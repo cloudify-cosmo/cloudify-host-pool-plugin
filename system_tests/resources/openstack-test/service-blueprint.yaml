@@ -37,7 +37,6 @@ node_templates:
     type: cloudify.nodes.HostPoolService
     properties:
       pool: pools/pool.yaml
-      working_directory: /tmp
     relationships:
       - type: cloudify.relationships.contained_in
         target: service_host
