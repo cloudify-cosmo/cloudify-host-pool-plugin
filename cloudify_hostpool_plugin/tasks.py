@@ -113,6 +113,9 @@ def release(service_url, **_):
 def _save_keyfile(key_content, key_id):
     '''Write host SSH key to ~/.ssh'''
     key_path = os.path.expanduser('~/.ssh/key_{0}'.format(key_id))
+    key_dir = os.path.dirname(key_path)
+    if not os.path.exists(key_dir):
+        os.makedirs(key_dir)
     ctx.logger.debug('Saving key contents to {0}'.format(key_path))
     with open(key_path, 'w') as f_key:
         f_key.write(key_content)

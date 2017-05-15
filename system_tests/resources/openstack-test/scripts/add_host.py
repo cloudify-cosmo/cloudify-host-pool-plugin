@@ -98,7 +98,7 @@ def add_host(hostname, ip, user, port):
             credentials=credentials_data, os='windows'
         )
     else:
-        key_file_path = ctx.source.node.properties['agent_config']['key']
+        key_file_path = ctx.target.instance.runtime_properties['key_path']
 
         with open(key_file_path, 'r') as key_file_data:
             key_data = key_file_data.read()
@@ -116,7 +116,9 @@ def add_host(hostname, ip, user, port):
 
 
 def main():
-
+    # This runs in the hostpool service <-> new hostpool host relationship;
+    # `source` is the new host, `target` is the service. The script runs on
+    # the service.
     ctx.logger.info('Begin adding host to host pool.')
 
     hostname = str(ctx.source.instance.id)
