@@ -1,3 +1,6 @@
+1.5:
+- Create the ssh key directory if it doesn't exist
+
 1.4:
  - Updated to work with new host pool service
  - Added Windows Host Support
