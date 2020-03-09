@@ -100,3 +100,6 @@ This is the usable node type for allocating Windows hosts from the hostpool serv
 
 All properties of this node type are inherited from its derived type.  This node type
 sets the inherited *os* property to *windows*.
+
+## Examples
+For official blueprint examples using this Cloudify plugin, please see [Cloudify Community Blueprints Examples](https://github.com/cloudify-community/blueprint-examples/).
