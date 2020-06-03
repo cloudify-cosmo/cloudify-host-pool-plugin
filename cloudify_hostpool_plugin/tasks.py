@@ -19,16 +19,16 @@
 '''
 
 import os
-import httplib
 import requests
 import stat
 
-from urlparse import urlparse
 from requests.exceptions import RequestException, Timeout
 
 from cloudify import ctx
 from cloudify.exceptions import NonRecoverableError, RecoverableError
 from cloudify.decorators import operation
+
+from ._compat import httplib, urlparse, text_type
 
 RUNTIME_PROPERTIES_KEYS = [
     'ip', 'user', 'port',
@@ -41,7 +41,7 @@ def acquire(service_url, **_):
     '''Allocate a host for the user from the pool'''
     # Format the OS request
     requested_os = ctx.node.properties.get('os')
-    if not isinstance(requested_os, basestring):
+    if not isinstance(requested_os, text_type):
         raise NonRecoverableError('Requested OS must be a string')
     # Normalize filters
     filters = ctx.node.properties.get('filters', dict())

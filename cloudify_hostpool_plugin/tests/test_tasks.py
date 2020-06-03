@@ -21,16 +21,16 @@
 
 import os
 import unittest
-import httplib
 import requests_mock
 
 from collections import namedtuple
-from urlparse import urlparse
 
-from cloudify.mocks import MockCloudifyContext
-from cloudify_hostpool_plugin import tasks
-from cloudify.exceptions import NonRecoverableError
 from cloudify.state import current_ctx
+from cloudify_hostpool_plugin import tasks
+from cloudify.mocks import MockCloudifyContext
+from cloudify.exceptions import NonRecoverableError
+
+from .._compat import httplib, urlparse
 
 HOST_ID = 12345
 SERVICE_URL = 'hostpool-svc.mock.com'
