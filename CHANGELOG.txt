@@ -1,7 +1,10 @@
+1.5.1:
+- Support Python 3
+
 1.5:
 - Create the ssh key directory if it doesn't exist
 
 1.4:
- - Updated to work with new host pool service
- - Added Windows Host Support
- - Adding tagging support
+- Updated to work with new host pool service
+- Added Windows Host Support
+- Adding tagging support
