@@ -4,3 +4,4 @@ testtools
 nose
 nose-cov
 testfixtures
+https://github.com/cloudify-cosmo/cloudify-common/archive/master.zip
