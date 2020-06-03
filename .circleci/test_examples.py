@@ -60,43 +60,38 @@ prepare_test(plugins=PLUGINS_TO_UPLOAD,
              secrets=SECRETS_TO_CREATE,
              plugin_test=False)
 
-test_blueprint = 'examples/blueprint.yaml'
-service_blueprint = 'examples/examples/blueprint.yaml'
 infra_blueprint = \
-    'examples/examples/blueprint-examples/virtual-machine/{0}.yaml'
-infra_name = 'openstack'
+    'examples/service/examples/' \
+    'blueprint-examples/virtual-machine/' \
+    'openstack.yaml'
+infra_test_name = 'infra-openstack'
+
 service_test_name = 'service'
-service_inputs = 'infra_name={0}'.format(infra_name)
+service_blueprint = 'examples/service/examples/blueprint.yaml'
+service_inputs = 'infra_name=openstack'
+
+plugin_test_name = 'hostpool'
+plugin_blueprint = 'examples/blueprint.yaml'
+inputs = 'agent_installation=none'
 
 
-@pytest.fixture(scope='function', params=[test_blueprint])
+@pytest.fixture(scope='function', params=[plugin_blueprint])
 def blueprint_test(request):
-
-    def nested_function(*args, **kwargs):
+    blueprints_upload(infra_blueprint,
+                      infra_test_name)
+    blueprints_upload(service_blueprint,
+                      service_test_name)
+    deployments_create(service_test_name, service_inputs)
+    try:
+        executions_start('install', service_test_name, 3000)
         try:
-            basic_blueprint_test(*args, **kwargs)
+            basic_blueprint_test(request.param, plugin_test_name)
         except:
-            cleanup_on_failure(dirname_param)
+            cleanup_on_failure(plugin_test_name)
             raise
-
-    def nested_service_test(test_function_arguments,
-                            test_function_kwargs):
-        blueprints_upload(
-            infra_blueprint.format(infra_name),
-            'infra-{0}'.format(infra_name))
-        deployments_create(service_test_name, service_inputs)
-        try:
-            executions_start('install', service_test_name, 3000)
-            nested_function(*test_function_arguments, **test_function_kwargs)
-        except:
-            cleanup_on_failure(service_test_name)
-
-    dirname_param = os.path.dirname(request.param).split('/')[-1:][0]
-    inputs = ''
-    nested_service_test(
-        (request.param, dirname_param),
-        {'inputs': inputs, 'timeout': 3000}
-    )
+    except:
+        cleanup_on_failure(service_test_name)
+        raise
 
 
 def test_blueprint(blueprint_test):

@@ -1,0 +1,48 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+description: Cloudify Getting Started blueprint. Deploys JBoss.
+
+imports:
+  - http://cloudify.co/spec/cloudify/5.0.5/types.yaml
+  - plugin:cloudify-host-pool-plugin
+
+inputs:
+
+  agent_installation:
+    default: none
+
+node_templates:
+
+  node1:
+    type: cloudify.hostpool.nodes.LinuxHost
+    properties:
+      ip: 172.20.0.6
+      agent_config:
+        install_method: { get_input: agent_installation }
+        key: "a key"
+        password: "badpassword"
+        user: "admin"
+        port: 22
+
+
+  node2:
+    type: cloudify.hostpool.nodes.LinuxHost
+    properties:
+      ip: 172.20.0.7
+      agent_config:
+        install_method: { get_input: agent_installation }
+        key: "a key"
+        password: "badpassword"
+        user: "admin"
+        port: 22
+
+  node3:
+    type: cloudify.hostpool.nodes.LinuxHost
+    properties:
+      ip: 172.20.0.8
+      agent_config:
+        install_method: { get_input: agent_installation }
+        key: "a key"
+        password: "badpassword"
+        user: "admin"
+        port: 22
