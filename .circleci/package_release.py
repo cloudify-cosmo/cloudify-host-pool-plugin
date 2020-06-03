@@ -9,4 +9,4 @@ setup_py = path.join(
 
 if __name__ == '__main__':
     plugin_release_with_latest(
-        'cloudify-hostpool-plugin', find_version(setup_py))
+        'cloudify-host-pool-plugin', find_version(setup_py))

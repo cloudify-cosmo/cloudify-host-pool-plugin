@@ -15,48 +15,89 @@
 
 
 import os
+import json
 import pytest
 
 from ecosystem_tests.dorkl import (
+    blueprints_upload,
+    deployments_create,
+    executions_start,
     basic_blueprint_test,
-    cleanup_on_failure, prepare_test
+    cleanup_on_failure,
+    prepare_test,
+    EcosystemTimeout
 )
 
+OS_VERSION = '3.2.15'
+OS_WAGON = 'https://github.com/cloudify-cosmo/cloudify-openstack-plugin/' \
+           'releases/download/{v}/cloudify_openstack_plugin-{v}-py27-none-' \
+           'linux_x86_64-centos-Core.wgn'.format(v=OS_VERSION)
+OS_PLUGIN = 'https://github.com/cloudify-cosmo/' \
+            'cloudify-openstack-plugin/releases/download/' \
+            '{v}/plugin.yaml'.format(v=OS_VERSION)
+PLUGINS_TO_UPLOAD = [(OS_WAGON, OS_PLUGIN)]
+
+
 SECRETS_TO_CREATE = {
-    'aws_access_key_id': False,
-    'aws_secret_access_key': False,
+    'openstack_username': False,
+    'openstack_password': False,
+    'openstack_tenant_name': False,
+    'openstack_auth_url': False,
+    'openstack_region': False,
+    'openstack_region_name': False,
+    'openstack_external_network': False,
+    'openstack_project_id': False,
+    'openstack_project_name': False,
+    'openstack_project_domain_id': False,
+    'openstack_user_domain_name': False,
+    'openstack_project_domain_name': False,
+    'base_image_id': False,
+    'base_flavor_id': False,
 }
 
-prepare_test(secrets=SECRETS_TO_CREATE)
 
-blueprint_list = ['examples/blueprint-examples/hello-world-example/aws.yaml',
-                  'examples/blueprint-examples/'
-                  'virtual-machine/aws-cloudformation.yaml',
-                  'examples/blueprint-examples/'
-                  'kubernetes/aws-eks/blueprint.yaml']
+prepare_test(plugins=PLUGINS_TO_UPLOAD,
+             secrets=SECRETS_TO_CREATE,
+             plugin_test=False)
 
-
-@pytest.fixture(scope='function', params=blueprint_list)
-def blueprint_examples(request):
-    test_name = os.path.dirname(request.param).split('/')[-1:][0]
-    if os.environ['TEST_NAME'] not in test_name:
-        return
-    if 'eks' in test_name or 'cloudformation' in test_name:
-        inputs = 'aws_region_name=us-east-1 -i resource_suffix={0}'.format(
-            os.environ.get('CIRCLE_BUILD_NUM', 'tst'))
-    else:
-        inputs = 'aws_region_name=us-east-1'
-    try:
-        basic_blueprint_test(
-            request.param,
-            test_name,
-            inputs=inputs,
-            timeout=3000
-        )
-    except:
-        cleanup_on_failure(test_name)
-        raise
+test_blueprint = 'examples/blueprint.yaml'
+service_blueprint = 'examples/examples/blueprint.yaml'
+infra_blueprint = \
+    'examples/examples/blueprint-examples/virtual-machine/{0}.yaml'
+infra_name = 'openstack'
+service_test_name = 'service'
+service_inputs = 'infra_name={0}'.format(infra_name)
 
 
-def test_blueprints(blueprint_examples):
-    assert blueprint_examples is None
+@pytest.fixture(scope='function', params=[test_blueprint])
+def blueprint_test(request):
+
+    def nested_function(*args, **kwargs):
+        try:
+            basic_blueprint_test(*args, **kwargs)
+        except:
+            cleanup_on_failure(dirname_param)
+            raise
+
+    def nested_service_test(test_function_arguments,
+                            test_function_kwargs):
+        blueprints_upload(
+            infra_blueprint.format(infra_name),
+            'infra-{0}'.format(infra_name))
+        deployments_create(service_test_name, service_inputs)
+        try:
+            executions_start('install', service_test_name, 3000)
+            nested_function(*test_function_arguments, **test_function_kwargs)
+        except:
+            cleanup_on_failure(service_test_name)
+
+    dirname_param = os.path.dirname(request.param).split('/')[-1:][0]
+    inputs = ''
+    nested_service_test(
+        (request.param, dirname_param),
+        {'inputs': inputs, 'timeout': 3000}
+    )
+
+
+def test_blueprint(blueprint_test):
+    assert blueprint_test is None

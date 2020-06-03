@@ -137,7 +137,8 @@ commands:
       - run:
           name: "Pull Submodules"
           command: |
-            git submodule update --init --recursive
+            git submodule init
+            git submodule update --remote --recursive
       - attach_workspace:
           at: workspace
       - run:
@@ -250,57 +251,57 @@ jobs:
 workflows:
   version: 2
   tests:
-    jobs: &all_jobs
+    jobs:
       - py3_compat
       - unittests_py27
       - unittests_py36
-#      - wagon:
-#          filters:
-#            branches:
-#              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
-#      - rhel_wagon:
-#          filters:
-#            branches:
-#              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
-#      - integration_tests:
-#          requires:
-#            - wagon
-#            - rhel_wagon
-#          filters:
-#            branches:
-#              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
-#      - release:
-#          filters:
-#            branches:
-#              only: /master/
-#          requires:
-#            - wagon
-#            - rhel_wagon
-#            - integration_tests
-#  nightly:
-#    triggers:
-#    - schedule:
-#        cron: "0 1 * * *"
-#        filters:
-#          branches:
-#            only:
-#              - master
-#    jobs:
-#      - py3_compat
-#      - unittests_py27
-#      - unittests_py36
-#      - wagon:
-#          filters:
-#            branches:
-#              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
-#      - rhel_wagon:
-#          filters:
-#            branches:
-#              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
-#      - integration_tests:
-#          requires:
-#            - wagon
-#            - rhel_wagon
-#          filters:
-#            branches:
-#              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
+      - wagon:
+          filters:
+            branches:
+              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
+      - rhel_wagon:
+          filters:
+            branches:
+              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
+      - integration_tests:
+          requires:
+            - wagon
+            - rhel_wagon
+          filters:
+            branches:
+              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
+      - release:
+          filters:
+            branches:
+              only: /master/
+          requires:
+            - wagon
+            - rhel_wagon
+            - integration_tests
+  nightly:
+    triggers:
+    - schedule:
+        cron: "0 1 * * *"
+        filters:
+          branches:
+            only:
+              - master
+    jobs:
+      - py3_compat
+      - unittests_py27
+      - unittests_py36
+      - wagon:
+          filters:
+            branches:
+              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
+      - rhel_wagon:
+          filters:
+            branches:
+              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
+      - integration_tests:
+          requires:
+            - wagon
+            - rhel_wagon
+          filters:
+            branches:
+              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
