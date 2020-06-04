@@ -261,18 +261,18 @@ workflows:
       - wagon:
           filters:
             branches:
-              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
+              only: /([0-9\.]*\-build|master)/
       - rhel_wagon:
           filters:
             branches:
-              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
+              only: /([0-9\.]*\-build|master)/
       - integration_tests:
           requires:
             - wagon
             - rhel_wagon
           filters:
             branches:
-              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
+              only: /([0-9\.]*\-build|master)/
       - release:
           filters:
             branches:
@@ -296,15 +296,15 @@ workflows:
       - wagon:
           filters:
             branches:
-              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
+              only: /([0-9\.]*\-build|master)/
       - rhel_wagon:
           filters:
             branches:
-              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
+              only: /([0-9\.]*\-build|master)/
       - integration_tests:
           requires:
             - wagon
             - rhel_wagon
           filters:
             branches:
-              only: /([0-9\.]*\-build|master|dev|CY-2550-Host-Pool-Python3)/
+              only: /([0-9\.]*\-build|master)/

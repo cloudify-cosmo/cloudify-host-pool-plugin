@@ -25,7 +25,7 @@ from ecosystem_tests.dorkl import (
     basic_blueprint_test,
     cleanup_on_failure,
     prepare_test,
-    EcosystemTimeout
+    cloudify_exec
 )
 
 OS_VERSION = '3.2.15'
@@ -57,8 +57,7 @@ SECRETS_TO_CREATE = {
 
 
 prepare_test(plugins=PLUGINS_TO_UPLOAD,
-             secrets=SECRETS_TO_CREATE,
-             plugin_test=False)
+             secrets=SECRETS_TO_CREATE)
 
 infra_blueprint = \
     'examples/service/examples/' \
@@ -72,7 +71,6 @@ service_inputs = 'infra_name=openstack'
 
 plugin_test_name = 'hostpool'
 plugin_blueprint = 'examples/blueprint.yaml'
-inputs = 'agent_installation=none'
 
 
 @pytest.fixture(scope='function', params=[plugin_blueprint])
@@ -84,8 +82,14 @@ def blueprint_test(request):
     deployments_create(service_test_name, service_inputs)
     try:
         executions_start('install', service_test_name, 3000)
+        capabilities = cloudify_exec(
+            'cfy deployment outputs {0}'.format(service_test_name))
         try:
-            basic_blueprint_test(request.param, plugin_test_name)
+            basic_blueprint_test(request.param,
+                                 plugin_test_name,
+                                 inputs='service_url={0}'.format(
+                                     capabilities['admin_url']['value']
+                                 ))
         except:
             cleanup_on_failure(plugin_test_name)
             raise

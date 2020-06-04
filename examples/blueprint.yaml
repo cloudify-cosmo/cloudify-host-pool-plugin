@@ -8,41 +8,56 @@ imports:
 
 inputs:
 
-  agent_installation:
-    default: none
+  service_url:
+    type: string
 
 node_templates:
 
   node1:
     type: cloudify.hostpool.nodes.LinuxHost
     properties:
-      ip: 172.20.0.6
       agent_config:
-        install_method: { get_input: agent_installation }
-        key: "a key"
-        password: "badpassword"
-        user: "admin"
-        port: 22
+        install_method: none
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
+          inputs:
+            service_url: { get_input: service_url }
+        delete:
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.release
+          inputs:
+            service_url: { get_input: service_url }
 
 
   node2:
     type: cloudify.hostpool.nodes.LinuxHost
     properties:
-      ip: 172.20.0.7
       agent_config:
-        install_method: { get_input: agent_installation }
-        key: "a key"
-        password: "badpassword"
-        user: "admin"
-        port: 22
+        install_method: none
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
+          inputs:
+            service_url: { get_input: service_url }
+        delete:
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.release
+          inputs:
+            service_url: { get_input: service_url }
 
   node3:
     type: cloudify.hostpool.nodes.LinuxHost
     properties:
-      ip: 172.20.0.8
       agent_config:
-        install_method: { get_input: agent_installation }
-        key: "a key"
-        password: "badpassword"
-        user: "admin"
-        port: 22
+        install_method: none
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
+          inputs:
+            service_url: { get_input: service_url }
+        delete:
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.release
+          inputs:
+            service_url: { get_input: service_url }
