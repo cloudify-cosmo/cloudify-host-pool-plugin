@@ -1,5 +1,5 @@
 ########
-# Copyright (c) 2015 GigaSpaces Technologies Ltd. All rights reserved
+# Copyright (c) 2020 Cloudify Platform Ltd. All rights reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,9 +13,22 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-import os
+"""Python 2 + 3 compatibility utils"""
+# flake8: noqa
 
+import sys
 
-def get_resource(resource):
-    resources_dir = os.path.dirname(os.path.realpath(__file__))
-    return os.path.join(resources_dir, resource)
+PY2 = sys.version_info[0] == 2
+
+if PY2:
+    import httplib
+    from urlparse import urlparse
+    text_type = unicode
+else:
+    import http.client as httplib
+    from urllib.parse import urlparse
+    text_type = str
+
+__all__ = [
+    'PY2', 'text_type', 'httplib', 'urlparse'
+]

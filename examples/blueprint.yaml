@@ -1,0 +1,63 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+description: Cloudify Getting Started blueprint. Deploys JBoss.
+
+imports:
+  - http://cloudify.co/spec/cloudify/5.0.5/types.yaml
+  - plugin:cloudify-host-pool-plugin
+
+inputs:
+
+  service_url:
+    type: string
+
+node_templates:
+
+  node1:
+    type: cloudify.hostpool.nodes.LinuxHost
+    properties:
+      agent_config:
+        install_method: none
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
+          inputs:
+            service_url: { get_input: service_url }
+        delete:
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.release
+          inputs:
+            service_url: { get_input: service_url }
+
+
+  node2:
+    type: cloudify.hostpool.nodes.LinuxHost
+    properties:
+      agent_config:
+        install_method: none
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
+          inputs:
+            service_url: { get_input: service_url }
+        delete:
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.release
+          inputs:
+            service_url: { get_input: service_url }
+
+  node3:
+    type: cloudify.hostpool.nodes.LinuxHost
+    properties:
+      agent_config:
+        install_method: none
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.acquire
+          inputs:
+            service_url: { get_input: service_url }
+        delete:
+          implementation: hostpool.cloudify_hostpool_plugin.tasks.release
+          inputs:
+            service_url: { get_input: service_url }

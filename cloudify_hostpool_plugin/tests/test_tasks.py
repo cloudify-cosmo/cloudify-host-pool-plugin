@@ -20,17 +20,18 @@
 '''
 
 import os
+import json
 import unittest
-import httplib
 import requests_mock
 
 from collections import namedtuple
-from urlparse import urlparse
 
-from cloudify.mocks import MockCloudifyContext
-from cloudify_hostpool_plugin import tasks
-from cloudify.exceptions import NonRecoverableError
 from cloudify.state import current_ctx
+from cloudify.mocks import MockCloudifyContext
+from cloudify.exceptions import NonRecoverableError
+
+from .. import tasks
+from .._compat import httplib, urlparse
 
 HOST_ID = 12345
 SERVICE_URL = 'hostpool-svc.mock.com'
@@ -74,8 +75,14 @@ class AcquireHostTestCase(unittest.TestCase):
             reason='A very detailed error reason'
         )
 
-        self.error_response = {'error': self.opts.error,
-                               'code': self.opts.error_code}
+        self.error_response = json.loads(
+            json.dumps(
+                {
+                    'error': self.opts.error,
+                    'code': self.opts.error_code
+                }
+            )
+        )
 
     def tearDown(self):
         current_ctx.clear()
@@ -88,7 +95,7 @@ class AcquireHostTestCase(unittest.TestCase):
         mock.register_uri(
             'POST',
             '{0}/host/allocate'.format(self.endpoint),
-            json={
+            json=json.loads(json.dumps({
                 'id': self.opts.host_id,
                 'os': 'linux',
                 'endpoint': {
@@ -100,10 +107,9 @@ class AcquireHostTestCase(unittest.TestCase):
                     'username': self.opts.username,
                     'password': self.opts.password
                 }
-            },
-            status_code=httplib.OK
-        )
-        self.ctx.node.properties['os'] = 'linux'
+            })), status_code=httplib.OK)
+        self.ctx.node.properties.update(
+            json.loads(json.dumps({'os':  'linux'})))
         tasks.acquire(self.endpoint, ctx=self.ctx)
         self.assertEqual(self.ctx.instance.runtime_properties['host_id'],
                          self.opts.host_id)
@@ -120,7 +126,7 @@ class AcquireHostTestCase(unittest.TestCase):
         mock.register_uri(
             'POST',
             '{0}/host/allocate'.format(self.endpoint),
-            json={
+            json=json.loads(json.dumps({
                 'id': self.opts.host_id,
                 'os': 'linux',
                 'endpoint': {
@@ -132,10 +138,9 @@ class AcquireHostTestCase(unittest.TestCase):
                     'username': self.opts.username,
                     'key': self.opts.keyfile_content
                 }
-            },
-            status_code=httplib.OK
-        )
-        self.ctx.node.properties['os'] = 'linux'
+            })), status_code=httplib.OK)
+        self.ctx.node.properties.update(
+            json.loads(json.dumps({'os':  'linux'})))
         tasks.acquire(self.endpoint, ctx=self.ctx)
         self.assertEqual(self.ctx.instance.runtime_properties['host_id'],
                          self.opts.host_id)
@@ -155,7 +160,8 @@ class AcquireHostTestCase(unittest.TestCase):
             '{0}/host/allocate'.format(self.endpoint),
             status_code=httplib.BAD_REQUEST
         )
-        self.ctx.node.properties['os'] = 12345
+        self.ctx.node.properties.update(
+            json.loads(json.dumps({'os':  12345})))
         self.assertRaisesRegexp(
             NonRecoverableError,
             'Requested OS must be a string',
@@ -172,7 +178,8 @@ class AcquireHostTestCase(unittest.TestCase):
             json=self.error_response,
             status_code=self.opts.error_code
         )
-        self.ctx.node.properties['os'] = 'linux'
+        self.ctx.node.properties.update(
+            json.loads(json.dumps({'os':  'linux'})))
         self.assertRaisesRegexp(
             NonRecoverableError,
             'Error: {0}, Reason: {1}'.format(
