@@ -93,8 +93,8 @@ def blueprint_test(request):
         except:
             cleanup_on_failure(plugin_test_name)
             raise
-    except:
         executions_start('uninstall', service_test_name, 3000)
+    except:
         cleanup_on_failure(service_test_name)
         raise
 
