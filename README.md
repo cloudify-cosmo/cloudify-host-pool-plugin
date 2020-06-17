@@ -48,6 +48,8 @@ node_templates:
 ```
 
 
+For official blueprint examples using this Cloudify plugin, please see [Cloudify Community Blueprints Examples](https://github.com/cloudify-community/blueprint-examples/).
+
 ## Cloudify node types
 
 ### cloudify.hostpool.nodes.Host
