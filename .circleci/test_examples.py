@@ -28,14 +28,22 @@ from ecosystem_tests.dorkl import (
     cloudify_exec
 )
 
-OS_VERSION = '3.2.15'
+OS_VERSION = '3.2.16'
 OS_WAGON = 'https://github.com/cloudify-cosmo/cloudify-openstack-plugin/' \
-           'releases/download/{v}/cloudify_openstack_plugin-{v}-py27-none-' \
-           'linux_x86_64-centos-Core.wgn'.format(v=OS_VERSION)
-OS_PLUGIN = 'https://github.com/cloudify-cosmo/' \
-            'cloudify-openstack-plugin/releases/download/' \
-            '{v}/plugin.yaml'.format(v=OS_VERSION)
-PLUGINS_TO_UPLOAD = [(OS_WAGON, OS_PLUGIN)]
+           'releases/download/{v}/cloudify_openstack_plugin-{v}-' \
+           'centos-Core-py27.py36-none-linux_x86_64.wgn'.format(v=OS_VERSION)
+OS_PLUGIN = 'https://github.com/cloudify-cosmo/cloudify-openstack-plugin/' \
+            'releases/download/{v}/plugin.yaml'.format(v=OS_VERSION)
+'''Temporary until all the plugins in the bundle will 
+released with py2py3 wagons'''
+UT_VERSION = '1.23.5'
+UT_WAGON = 'https://github.com/cloudify-incubator/cloudify-utilities-plugin/' \
+           'releases/download/{v}/cloudify_utilities_plugin-{v}-centos' \
+           '-Core-py27.py36-none-linux_x86_64.wgn'.format(v=UT_VERSION)
+UT_PLUGIN = 'https://github.com/cloudify-incubator/cloudify-utilities-' \
+            'plugin/releases/download/{v}/plugin.yaml'.format(v=UT_VERSION)
+
+PLUGINS_TO_UPLOAD = [(OS_WAGON, OS_PLUGIN), (UT_WAGON, UT_PLUGIN)]
 
 
 SECRETS_TO_CREATE = {
@@ -55,9 +63,9 @@ SECRETS_TO_CREATE = {
     'base_flavor_id': False,
 }
 
+prepare_test(plugins=PLUGINS_TO_UPLOAD, secrets=SECRETS_TO_CREATE,
+             execute_bundle_upload=False)
 
-prepare_test(plugins=PLUGINS_TO_UPLOAD,
-             secrets=SECRETS_TO_CREATE)
 
 infra_blueprint = \
     'examples/service/examples/' \
