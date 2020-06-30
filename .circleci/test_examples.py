@@ -42,8 +42,14 @@ UT_WAGON = 'https://github.com/cloudify-incubator/cloudify-utilities-plugin/' \
            '-Core-py27.py36-none-linux_x86_64.wgn'.format(v=UT_VERSION)
 UT_PLUGIN = 'https://github.com/cloudify-incubator/cloudify-utilities-' \
             'plugin/releases/download/{v}/plugin.yaml'.format(v=UT_VERSION)
-
-PLUGINS_TO_UPLOAD = [(OS_WAGON, OS_PLUGIN), (UT_WAGON, UT_PLUGIN)]
+FAB_VERSION = '2.0.3'
+FAB_WAGON = 'https://github.com/cloudify-cosmo/cloudify-fabric-plugin/' \
+            'releases/download/{v}/cloudify_fabric_plugin-{v}-centos-' \
+            'Core-py27.py36-none-linux_x86_64.wgn'.format(v=FAB_VERSION)
+FAB_PLUGIN = 'https://github.com/cloudify-cosmo/cloudify-fabric-plugin/' \
+             'releases/download/{v}/plugin.yaml'.format(v=FAB_VERSION)
+PLUGINS_TO_UPLOAD = [(OS_WAGON, OS_PLUGIN), (UT_WAGON, UT_PLUGIN),
+                     (FAB_WAGON, FAB_PLUGIN)]
 
 
 SECRETS_TO_CREATE = {
