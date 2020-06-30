@@ -27,7 +27,10 @@ from ecosystem_tests.dorkl import (
     prepare_test,
     cloudify_exec
 )
-from . import (get_plugins_to_upload, SECRETS_TO_CREATE)
+from __init__ import (
+    get_plugins_to_upload,
+    SECRETS_TO_CREATE
+)
 
 
 prepare_test(plugins=get_plugins_to_upload(), secrets=SECRETS_TO_CREATE,
