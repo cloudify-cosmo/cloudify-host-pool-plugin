@@ -44,6 +44,10 @@ FAB_OLD_WAGON = 'http://repository.cloudifysource.org/cloudify/wagons/' \
 FAB_OLD_PLUGIN = 'http://www.getcloudify.org/spec/fabric-plugin/' \
                  '{v}/plugin.yaml'.format(v=FAB_OLD_VERSION)
 
+PLUGINS_505 = [(OS_WAGON, OS_PLUGIN), (UT_WAGON, UT_PLUGIN),
+               (FAB_OLD_WAGON, FAB_OLD_PLUGIN)]
+PLUGINS_510 = [(OS_WAGON, OS_PLUGIN), (UT_WAGON, UT_PLUGIN),
+               (FAB_WAGON, FAB_PLUGIN)]
 
 SECRETS_TO_CREATE = {
     'openstack_username': False,
@@ -62,13 +66,4 @@ SECRETS_TO_CREATE = {
     'base_flavor_id': False,
 }
 
-
-# This is done because fabric 2.X compatibility.
-def get_plugins_to_upload():
-    plugins_to_upload = [(OS_WAGON, OS_PLUGIN), (UT_WAGON, UT_PLUGIN)]
-    if "505" in os.environ['CIRCLE_JOB']:
-        return plugins_to_upload.append((FAB_OLD_WAGON, FAB_OLD_PLUGIN))
-    # It's 5.1.0 manager.
-    else:
-        return plugins_to_upload.append((FAB_WAGON, FAB_PLUGIN))
 
