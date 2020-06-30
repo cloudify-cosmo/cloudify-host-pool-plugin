@@ -67,8 +67,8 @@ SECRETS_TO_CREATE = {
 def get_plugins_to_upload():
     plugins_to_upload = [(OS_WAGON, OS_PLUGIN), (UT_WAGON, UT_PLUGIN)]
     if "505" in os.environ['CIRCLE_JOB']:
-        return plugins_to_upload.append((FAB_OLD_WAGON, FAB_OLD_PLUGIN))
+        return plugins_to_upload.append([(FAB_OLD_WAGON, FAB_OLD_PLUGIN)])
     # It's 5.1.0 manager.
     else:
-        return plugins_to_upload.append((FAB_WAGON, FAB_PLUGIN))
+        return plugins_to_upload.append([(FAB_WAGON, FAB_PLUGIN)])
 
