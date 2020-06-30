@@ -258,7 +258,7 @@ jobs:
     environment:
       CLOUDIFY_SSL_TRUST_ALL: true
       IAAS: openstack
-      MANAGER_VERSION: 5.0.5
+      MANAGER_VERSION: "5.0.5"
     steps:
       - checkout
       - run_integration_tests_505
@@ -268,7 +268,7 @@ jobs:
     environment:
       CLOUDIFY_SSL_TRUST_ALL: true
       IAAS: openstack
-      MANAGER_VERSION: 5.1.0
+      MANAGER_VERSION: "5.1.0"
     steps:
       - checkout
       - run_integration_tests_510
