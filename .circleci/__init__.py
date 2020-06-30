@@ -66,8 +66,9 @@ SECRETS_TO_CREATE = {
 # This is done because fabric 2.X compatibility.
 def get_plugins_to_upload():
     plugins_to_upload = [(OS_WAGON, OS_PLUGIN), (UT_WAGON, UT_PLUGIN)]
-    if "505" in os.environ['CIRCLE_JOB']:
-        return plugins_to_upload + [(FAB_OLD_WAGON, FAB_OLD_PLUGIN)]
+    if os.environ['MANAGER_VERSION'] == "5.0.5":
+        plugins_to_upload.append((FAB_OLD_WAGON, FAB_OLD_PLUGIN))
     # It's 5.1.0 manager.
     else:
-        return plugins_to_upload + [(FAB_WAGON, FAB_PLUGIN)]
+        plugins_to_upload.append((FAB_WAGON, FAB_PLUGIN))
+    return plugins_to_upload
