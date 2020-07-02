@@ -30,19 +30,15 @@ UT_WAGON = 'https://github.com/cloudify-incubator/cloudify-utilities-plugin/' \
            '-Core-py27.py36-none-linux_x86_64.wgn'.format(v=UT_VERSION)
 UT_PLUGIN = 'https://github.com/cloudify-incubator/cloudify-utilities-' \
             'plugin/releases/download/{v}/plugin.yaml'.format(v=UT_VERSION)
-FAB_VERSION = '2.0.3'
+FAB_VERSION = '2.0.4'
 FAB_WAGON = 'https://github.com/cloudify-cosmo/cloudify-fabric-plugin/' \
             'releases/download/{v}/cloudify_fabric_plugin-{v}-centos-' \
             'Core-py27.py36-none-linux_x86_64.wgn'.format(v=FAB_VERSION)
 FAB_PLUGIN = 'https://github.com/cloudify-cosmo/cloudify-fabric-plugin/' \
              'releases/download/{v}/plugin.yaml'.format(v=FAB_VERSION)
-FAB_OLD_VERSION = '1.7.0'
-FAB_OLD_WAGON = 'http://repository.cloudifysource.org/cloudify/wagons/' \
-                'cloudify-fabric-plugin/{v}/cloudify_fabric_plugin-{v}' \
-                '-py27-none-linux_x86_64-centos-Core' \
-                '.wgn'.format(v=FAB_OLD_VERSION)
-FAB_OLD_PLUGIN = 'http://www.getcloudify.org/spec/fabric-plugin/' \
-                 '{v}/plugin.yaml'.format(v=FAB_OLD_VERSION)
+
+PLUGINS_TO_UPLOAD = [(OS_WAGON, OS_PLUGIN), (UT_WAGON, UT_PLUGIN),
+                     (FAB_WAGON, FAB_PLUGIN)]
 
 
 SECRETS_TO_CREATE = {
@@ -62,13 +58,3 @@ SECRETS_TO_CREATE = {
     'base_flavor_id': False,
 }
 
-
-# This is done because fabric 2.X compatibility.
-def get_plugins_to_upload():
-    plugins_to_upload = [(OS_WAGON, OS_PLUGIN), (UT_WAGON, UT_PLUGIN)]
-    if os.environ['MANAGER_VERSION'] == "5.0.5":
-        plugins_to_upload.append((FAB_OLD_WAGON, FAB_OLD_PLUGIN))
-    # It's 5.1.0 manager.
-    else:
-        plugins_to_upload.append((FAB_WAGON, FAB_PLUGIN))
-    return plugins_to_upload

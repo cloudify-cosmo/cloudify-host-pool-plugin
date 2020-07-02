@@ -28,12 +28,12 @@ from ecosystem_tests.dorkl import (
     cloudify_exec
 )
 from __init__ import (
-    get_plugins_to_upload,
+    PLUGINS_TO_UPLOAD,
     SECRETS_TO_CREATE
 )
 
 
-prepare_test(plugins=get_plugins_to_upload(), secrets=SECRETS_TO_CREATE,
+prepare_test(plugins=PLUGINS_TO_UPLOAD, secrets=SECRETS_TO_CREATE,
              execute_bundle_upload=False)
 
 infra_blueprint = \
