@@ -27,37 +27,14 @@ from ecosystem_tests.dorkl import (
     prepare_test,
     cloudify_exec
 )
-
-OS_VERSION = '3.2.15'
-OS_WAGON = 'https://github.com/cloudify-cosmo/cloudify-openstack-plugin/' \
-           'releases/download/{v}/cloudify_openstack_plugin-{v}-py27-none-' \
-           'linux_x86_64-centos-Core.wgn'.format(v=OS_VERSION)
-OS_PLUGIN = 'https://github.com/cloudify-cosmo/' \
-            'cloudify-openstack-plugin/releases/download/' \
-            '{v}/plugin.yaml'.format(v=OS_VERSION)
-PLUGINS_TO_UPLOAD = [(OS_WAGON, OS_PLUGIN)]
-
-
-SECRETS_TO_CREATE = {
-    'openstack_username': False,
-    'openstack_password': False,
-    'openstack_tenant_name': False,
-    'openstack_auth_url': False,
-    'openstack_region': False,
-    'openstack_region_name': False,
-    'openstack_external_network': False,
-    'openstack_project_id': False,
-    'openstack_project_name': False,
-    'openstack_project_domain_id': False,
-    'openstack_user_domain_name': False,
-    'openstack_project_domain_name': False,
-    'base_image_id': False,
-    'base_flavor_id': False,
-}
-
+from __init__ import (
+    PLUGINS_TO_UPLOAD,
+    SECRETS_TO_CREATE
+)
 
 prepare_test(plugins=PLUGINS_TO_UPLOAD,
-             secrets=SECRETS_TO_CREATE)
+             secrets=SECRETS_TO_CREATE,
+             execute_bundle_upload=False)
 
 infra_blueprint = \
     'examples/service/examples/' \

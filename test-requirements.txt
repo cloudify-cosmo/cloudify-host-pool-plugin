@@ -4,4 +4,9 @@ testtools
 nose
 nose-cov
 testfixtures
-https://github.com/cloudify-cosmo/cloudify-common/archive/master.zip
+
+# For integration tests
+git+https://github.com/cloudify-cosmo/cloudify-common@master#egg=cloudify-common[dispatcher]==master
+git+https://github.com/cloudify-cosmo/cloudify-cli@master#egg=cloudify-cli==master
+pytest==4.6.3
+pyyaml==3.12
