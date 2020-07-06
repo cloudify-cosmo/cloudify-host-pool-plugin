@@ -32,8 +32,8 @@ from __init__ import (
     SECRETS_TO_CREATE
 )
 
-
-prepare_test(plugins=PLUGINS_TO_UPLOAD, secrets=SECRETS_TO_CREATE,
+prepare_test(plugins=PLUGINS_TO_UPLOAD,
+             secrets=SECRETS_TO_CREATE,
              execute_bundle_upload=False)
 
 infra_blueprint = \
