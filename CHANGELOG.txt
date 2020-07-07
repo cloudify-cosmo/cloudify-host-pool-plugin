@@ -1,3 +1,5 @@
+1.5.3:
+- Use the bundle upload during integration tests.
 1.5.2:
 - Update wagon builder to py2.py3 wagon.
 1.5.1:

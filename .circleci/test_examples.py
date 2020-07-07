@@ -33,8 +33,7 @@ from __init__ import (
 )
 
 prepare_test(plugins=PLUGINS_TO_UPLOAD,
-             secrets=SECRETS_TO_CREATE,
-             execute_bundle_upload=False)
+             secrets=SECRETS_TO_CREATE)
 
 infra_blueprint = \
     'examples/service/examples/' \
