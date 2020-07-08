@@ -287,18 +287,18 @@ workflows:
       - wagon:
           filters:
             branches:
-              only: /([0-9\.]*\-build|master|CY-3060-use-bundle)/
+              only: /([0-9\.]*\-build|master)/
       - rhel_wagon:
           filters:
             branches:
-              only: /([0-9\.]*\-build|master|CY-3060-use-bundle)/
+              only: /([0-9\.]*\-build|master)/
       - integration_tests_505:
           requires:
             - wagon
             - rhel_wagon
           filters:
             branches:
-              only: /([0-9\.]*\-build|master|CY-3060-use-bundle)/
+              only: /([0-9\.]*\-build|master)/
       - integration_tests_510:
           requires:
             - wagon
@@ -306,7 +306,7 @@ workflows:
             - integration_tests_505
           filters:
             branches:
-              only: /([0-9\.]*\-build|master|CY-3060-use-bundle)/
+              only: /([0-9\.]*\-build|master)/
       - release:
           filters:
             branches:
