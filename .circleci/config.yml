@@ -216,7 +216,7 @@ commands:
           command: pip install --upgrade setuptools
       - run:
           name: install local project
-          command: pip install https://github.com/cloudify-incubator/cloudify-ecosystem-test/archive/CY-2791-Upload-Asset-to-S3.zip
+          command: pip install https://github.com/cloudify-incubator/cloudify-ecosystem-test/archive/latest.zip
       - attach_workspace:
           at: workspace
       - run: python .circleci/package_release.py
@@ -281,40 +281,40 @@ workflows:
   version: 2
   tests:
     jobs:
-#      - py3_compat
-#      - unittests_py27
-#      - unittests_py36
+      - py3_compat
+      - unittests_py27
+      - unittests_py36
       - wagon:
           filters:
             branches:
               only: /([0-9\.]*\-build|master)/
-#      - rhel_wagon:
-#          filters:
-#            branches:
-#              only: /([0-9\.]*\-build|master)/
-#      - integration_tests_505:
-#          requires:
-#            - wagon
-#            - rhel_wagon
-#          filters:
-#            branches:
-#              only: /([0-9\.]*\-build|master)/
-#      - integration_tests_510:
-#          requires:
-#            - wagon
-#            - rhel_wagon
-#          filters:
-#            branches:
-#              only: /([0-9\.]*\-build|master)/
+      - rhel_wagon:
+          filters:
+            branches:
+              only: /([0-9\.]*\-build|master)/
+      - integration_tests_505:
+          requires:
+            - wagon
+            - rhel_wagon
+          filters:
+            branches:
+              only: /([0-9\.]*\-build|master)/
+      - integration_tests_510:
+          requires:
+            - wagon
+            - rhel_wagon
+          filters:
+            branches:
+              only: /([0-9\.]*\-build|master)/
       - release:
           filters:
             branches:
               only: /master/
           requires:
             - wagon
-#            - rhel_wagon
-#            - integration_tests_505
-#            - integration_tests_510
+            - rhel_wagon
+            - integration_tests_505
+            - integration_tests_510
   nightly:
     triggers:
     - schedule:
