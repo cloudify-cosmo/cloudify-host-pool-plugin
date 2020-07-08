@@ -284,10 +284,10 @@ workflows:
 #      - py3_compat
 #      - unittests_py27
 #      - unittests_py36
-#      - wagon:
-#          filters:
-#            branches:
-#              only: /([0-9\.]*\-build|master)/
+      - wagon:
+          filters:
+            branches:
+              only: /([0-9\.]*\-build|master)/
 #      - rhel_wagon:
 #          filters:
 #            branches:
@@ -310,8 +310,8 @@ workflows:
           filters:
             branches:
               only: /master/
-#          requires:
-#            - wagon
+          requires:
+            - wagon
 #            - rhel_wagon
 #            - integration_tests_505
 #            - integration_tests_510
