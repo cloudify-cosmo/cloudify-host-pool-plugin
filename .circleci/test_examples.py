@@ -14,8 +14,6 @@
 # limitations under the License.
 
 
-import os
-import json
 import pytest
 
 from ecosystem_tests.dorkl import (
@@ -33,7 +31,8 @@ from __init__ import (
 )
 
 prepare_test(plugins=PLUGINS_TO_UPLOAD,
-             secrets=SECRETS_TO_CREATE)
+             secrets=SECRETS_TO_CREATE,
+             plugin_test=True)
 
 infra_blueprint = \
     'examples/service/examples/' \
