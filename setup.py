@@ -44,6 +44,6 @@ setup(
                 'via cloudify-host-pool-service',
     install_requires=[
         'cloudify-common>=4.4',
-        'requests'
+        'requests>=2.25.0'
     ]
 )
