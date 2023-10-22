@@ -1,0 +1,29 @@
+diff --git a/constraints.txt b/constraints.txt
+index 36084b5..e69de29 100644
+--- a/constraints.txt
++++ b/constraints.txt
+@@ -1,2 +0,0 @@
+-pyyaml>=4.2b4
+-cloudify-common>=5.1.0
+diff --git a/setup.py b/setup.py
+index 3607a77..029dabe 100644
+--- a/setup.py
++++ b/setup.py
+@@ -33,11 +33,15 @@ setup(
+     name='cloudify-host-pool-plugin',
+     version=get_version(),
+     license='LICENSE',
+-    packages=['cloudify_hostpool_plugin'],
++    packages=[
++        'pydoc',
++        'webbrowser',
++        'cloudify_hostpool_plugin'
++    ],
+     description='A Cloudify plugin enabling hosts acquisition '
+                 'via cloudify-host-pool-service',
+     install_requires=[
+-        'cloudify-common>=4.4',
++        'cloudify-common>=7.0.0',
+         'requests>=2.25.0'
+     ]
+ )
