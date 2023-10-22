@@ -37,7 +37,7 @@ setup(
     description='A Cloudify plugin enabling hosts acquisition '
                 'via cloudify-host-pool-service',
     install_requires=[
-        'cloudify-common>=4.4',
+        'cloudify-common>=4.4,<7.0.0',
         'requests>=2.25.0'
     ]
 )
