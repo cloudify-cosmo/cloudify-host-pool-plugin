@@ -61,8 +61,9 @@ workflows:
               only: /master/
           requires:
             - node/unittests_job
-            - wagonorb/rhel_wagon
             - wagonorb/wagon
+            - wagonorb/wagon_311
+            - wagonorb/rhel_wagon
             - wagonorb/arch64_wagon
             - node/validate_version_job
             - node/validate_documentation_job
