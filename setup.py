@@ -17,9 +17,9 @@
 
 import os
 import re
+import sys
 import pathlib
-
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 def get_version():
@@ -29,15 +29,25 @@ def get_version():
         var = outfile.read()
         return re.search(r'\d+.\d+.\d+', var).group()
 
+
+install_requires = ['requests>=2.25.0']
+if sys.version_info.major == 3 and sys.version_info.minor == 6:
+    packages = ['cloudify_hostpool_plugin']
+    install_requires += [
+        'cloudify-common>=4.4,<7.0.0',
+    ]
+else:
+    packages = find_packages()
+    install_requires += [
+        'fusion-common',
+    ]
+
 setup(
     name='cloudify-host-pool-plugin',
     version=get_version(),
     license='LICENSE',
-    packages=['cloudify_hostpool_plugin'],
+    packages=packages,
     description='A Cloudify plugin enabling hosts acquisition '
                 'via cloudify-host-pool-service',
-    install_requires=[
-        'cloudify-common>=4.4,<7.0.0',
-        'requests>=2.25.0'
-    ]
+    install_requires=install_requires
 )
